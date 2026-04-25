@@ -831,16 +831,6 @@ task.spawn(function()
     end
 end)
 
--- FPS Connection
-local fps_frameCount = 0
-local fps_lastUpdate = tick()
-getgenv().SailorHub_FPS = game:GetService("RunService").RenderStepped:Connect(function()
-    fps_frameCount = fps_frameCount + 1
-    if tick() - fps_lastUpdate >= 1 then
-        FPSLabel.Text = "FPS: " .. fps_frameCount
-        fps_frameCount = 0
-        fps_lastUpdate = tick()
-    end
-end)
+Window:Notify("Script Started", "Version: " .. (Library.Version or "Unknown"))
 
 Window:Notify("Script Started", "Weapon system ready. Version: " .. (Library.Version or "Unknown"))
