@@ -726,7 +726,7 @@ local function AbandonQuest()
 end
 
 local function TeleportToIsland(island)
-    if island == "SoulDominion" then
+    if island == "SoulDominion" or island == "Shinjuku" then
         local r = GetRemote("Remotes", "TeleportToPortal")
         if r then r:FireServer(island) end
     else
@@ -1025,7 +1025,7 @@ SummonTab:CreateToggle("Enable Auto Summon", false, function(v)
     SaveConfig()
 end)
 
-local summonBosses = {"SaberBoss", "QinShiBoss", "IchigoBoss", "GilgameshBoss", "BlessedMaidenBoss", "SaberAlterBoss", "MoonSlayerBoss", "IceQueenBoss", "GreatMage", "TrueAizen"}
+local summonBosses = {"SaberBoss", "QinShiBoss", "IchigoBoss", "GilgameshBoss", "BlessedMaidenBoss", "SaberAlterBoss", "MoonSlayerBoss", "IceQueenBoss", "GreatMage", "TrueAizen", "StrongestToday", "StrongestHistory"}
 SummonTab:CreateDropdown("Select Boss", summonBosses, "SaberBoss", false, function(v)
     Config.SelectedSummonBoss = v
     SaveConfig()
@@ -1038,12 +1038,14 @@ SummonTab:CreateDropdown("Select Difficulty", difficulties, "Normal", false, fun
 end)
 
 SummonTab:CreateLabel("--- Boss Locations ---")
+SummonTab:CreateLabel("🏝️ Shinjuku: Strongest bosses")
 SummonTab:CreateLabel("🏝️ Soul Dominion: TrueAizen")
 SummonTab:CreateLabel("🏝️ Easter Island: GreatMage")
 SummonTab:CreateLabel("🏝️ Sailor Island: All Others")
 
 -- Changelog Tab
 ChangelogTab:CreateLabel("--- Latest Updates ---")
+ChangelogTab:CreateLabel("[v1.5.1] 11:33 AM - Added StrongestBosses & Shinjuku")
 ChangelogTab:CreateLabel("[v1.5.0] 11:26 AM - Added Changelog system")
 ChangelogTab:CreateLabel("[v1.4.9] 11:24 AM - FIXED Fling bug (Physics Stabilizer)")
 ChangelogTab:CreateLabel("[v1.4.8] 11:10 AM - Added Soul Dominion Portal Support")
@@ -1359,9 +1361,9 @@ task.spawn(function()
     end
 end)
 
-local BuildDate = "April 25, 2026 - 11:26"
-print("Sailor Hub Loaded | Version: v1.5.0 | Build: " .. BuildDate)
-Window:Notify("Sailor Hub Loaded", "Version: v1.5.0\nBuild: " .. BuildDate)
+local BuildDate = "April 25, 2026 - 11:33"
+print("Sailor Hub Loaded | Version: v1.5.1 | Build: " .. BuildDate)
+Window:Notify("Sailor Hub Loaded", "Version: v1.5.1\nBuild: " .. BuildDate)
 
 -- Initial call (Optimized for Free Tier: Only 1 ping per session)
 task.spawn(function()
@@ -1479,12 +1481,16 @@ task.spawn(function()
             local bName = Config.SelectedSummonBoss
             local diff = Config.SelectedDifficulty
             
-            -- Nombre dinámico para GreatMage y TrueAizen
+            -- Nombres dinámicos
             local checkName = bName
             if bName == "GreatMage" then
                 checkName = "GreatMageBoss_" .. diff
             elseif bName == "TrueAizen" then
                 checkName = "TrueAizenBoss_" .. diff
+            elseif bName == "StrongestToday" then
+                checkName = "StrongestofTodayBoss_" .. diff
+            elseif bName == "StrongestHistory" then
+                checkName = "StrongestinHistoryBoss_" .. diff
             end
 
             -- Verificar si el Boss ya está vivo
@@ -1508,7 +1514,8 @@ task.spawn(function()
                 -- Si no está vivo, ir a la isla correcta
                 local targetIsland = "Sailor"
                 if bName == "GreatMage" then targetIsland = "Easter"
-                elseif bName == "TrueAizen" then targetIsland = "SoulDominion" end
+                elseif bName == "TrueAizen" then targetIsland = "SoulDominion"
+                elseif bName == "StrongestToday" or bName == "StrongestHistory" then targetIsland = "Shinjuku" end
                 
                 if CurrentIsland ~= targetIsland then
                     TeleportToIsland(targetIsland)
@@ -1520,6 +1527,8 @@ task.spawn(function()
                         game:GetService("ReplicatedStorage"):WaitForChild("RemoteEvents"):WaitForChild("RequestSpawnGreatMage"):FireServer(diff)
                     elseif bName == "TrueAizen" then
                         game:GetService("ReplicatedStorage"):WaitForChild("RemoteEvents"):WaitForChild("RequestSpawnTrueAizen"):FireServer(diff)
+                    elseif bName == "StrongestToday" or bName == "StrongestHistory" then
+                        game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("RequestSpawnStrongestBoss"):FireServer(bName, diff)
                     else
                         local remote = game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("RequestSummonBoss")
                         if bName == "SaberBoss" or bName == "QinShiBoss" or bName == "IchigoBoss" then
