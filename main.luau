@@ -89,6 +89,13 @@ local Config = {
 }
 
 function Library:CreateWindow(title, toggleKey)
+    local main, toggleBtn
+    local gui = Instance.new("ScreenGui")
+    gui.Name = "SailorHub"
+    gui.ResetOnSpawn = false
+    gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    gui.Parent = game:GetService("CoreGui")
+
     -- Improved Loading Screen (Configuration Loader)
     local loader = Instance.new("Frame", gui)
     loader.Size = UDim2.new(1,0,1,0)
@@ -156,21 +163,19 @@ function Library:CreateWindow(title, toggleKey)
         task.wait(0.6)
         loader:Destroy()
         blur:Destroy()
+        if main then main.Visible = true end
+        if toggleBtn then toggleBtn.Visible = true end
     end)
 
 
     print("Sailor UI Loaded: " .. Library.Version)
-    local gui = Instance.new("ScreenGui")
-    gui.Name = "SailorHub"
-    gui.ResetOnSpawn = false
-    gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-    gui.Parent = game:GetService("CoreGui")
 
-    local main = Instance.new("Frame", gui)
+    main = Instance.new("Frame", gui)
     main.Size = UDim2.new(0,720,0,460)
     main.Position = UDim2.new(0.5,-360,0.5,-230)
     main.BackgroundColor3 = C.BG
     main.BorderSizePixel = 0
+    main.Visible = false
     Instance.new("UICorner", main).CornerRadius = UDim.new(0,10)
 
     -- TopBar
@@ -233,8 +238,10 @@ function Library:CreateWindow(title, toggleKey)
             main.Visible = not main.Visible
         end
     end)
+    
     -- Floating Toggle Button (Mobile/PC Friendly)
-    local toggleBtn = Instance.new("ImageButton", gui)
+    toggleBtn = Instance.new("ImageButton", gui)
+    toggleBtn.Visible = false
     toggleBtn.Name = "SailorToggle"
     toggleBtn.Size = UDim2.new(0, 45, 0, 45)
     toggleBtn.Position = UDim2.new(0, 10, 0.5, -22)
@@ -1104,6 +1111,10 @@ end)
 
 -- Changelog Tab
 ChangelogTab:CreateLabel("--- Latest Updates ---")
+ChangelogTab:CreateLabel("[v1.7.6] 12:44 PM - FIXED Mobile Toggle Button visibility")
+ChangelogTab:CreateLabel("[v1.7.5] 12:43 PM - FIXED Loading Crash (Initialization Order)")
+ChangelogTab:CreateLabel("[v1.7.4] 12:41 PM - IMPROVED Loading UI (Menu hidden during load)")
+ChangelogTab:CreateLabel("[v1.7.3] 12:39 PM - ENHANCED Bug Report System (Diagnostics)")
 ChangelogTab:CreateLabel("[v1.7.2] 12:32 PM - FIXED AutoSummon Island TP (Global Scope)")
 ChangelogTab:CreateLabel("[v1.7.1] 12:31 PM - FIXED Atomic Boss (Logic & Targeting)")
 ChangelogTab:CreateLabel("[v1.7.0] 12:30 PM - FIXED Atomic Boss Island (Lawless)")
@@ -1143,8 +1154,16 @@ ReportTab:CreateLabel("- 3rd Offense: PERMANENT HUB BLACKLIST")
 ReportTab:CreateLabel("Reports are manually reviewed by the dev team.")
 
 local bugDescription = ""
+local bugIsland = "Not Selected"
+
 ReportTab:CreateTextBox("Describe the bug here...", "", function(v)
     bugDescription = v
+end)
+
+ReportTab:CreateLabel("Selecting the island helps us fix it faster (Optional)")
+local reportIslands = {"Not Selected", "Starter", "Jungle", "Desert", "Snow", "Sailor", "Shibuya", "HollowIsland", "Shinjuku", "Slime", "Academy", "Judgement", "SoulDominion", "Ninja", "Lawless", "Tower", "Easter", "World"}
+ReportTab:CreateDropdown("Island of the Bug", reportIslands, "Not Selected", false, function(v)
+    bugIsland = v
 end)
 
 ReportTab:CreateButton("Submit Bug Report", function()
@@ -1164,15 +1183,23 @@ ReportTab:CreateButton("Submit Bug Report", function()
 
     task.spawn(function()
         pcall(function()
+            local char = player.Character
+            local healthStr = "Unknown"
+            if char and char:FindFirstChild("Humanoid") then
+                healthStr = math.floor(char.Humanoid.Health) .. " / " .. math.floor(char.Humanoid.MaxHealth)
+            end
+
             local data = {
                 ["embeds"] = {{
                     ["title"] = "⚠️ NEW BUG REPORT",
                     ["description"] = "**Issue:**\n" .. bugDescription,
                     ["color"] = 0xff4b4b, -- Rojo para errores
                     ["fields"] = {
-                        {["name"] = "Player Info", ["value"] = "👤 " .. player.Name .. "\n🆔 " .. player.UserId, ["inline"] = true},
-                        {["name"] = "Location", ["value"] = "🏝️ Island: " .. (CurrentIsland or "Unknown"), ["inline"] = true},
-                        {["name"] = "Script Version", ["value"] = "📂 v1.5.4", ["inline"] = true}
+                        {["name"] = "👤 Player Info", ["value"] = "Name: " .. player.Name .. "\nDisplay: " .. player.DisplayName .. "\nID: " .. player.UserId, ["inline"] = true},
+                        {["name"] = "📅 Account Info", ["value"] = "Age: " .. player.AccountAge .. " days", ["inline"] = true},
+                        {["name"] = "🏝️ Location", ["value"] = "Selected: " .. bugIsland .. "\nReal: " .. (getgenv().CurrentIsland or "Unknown"), ["inline"] = true},
+                        {["name"] = "📂 Version", ["value"] = "v1.7.3", ["inline"] = true},
+                        {["name"] = "❤️ Health", ["value"] = healthStr, ["inline"] = true}
                     },
                     ["footer"] = {["text"] = "Reported at: " .. os.date("%X")}
                 }}
@@ -1446,9 +1473,9 @@ task.spawn(function()
     end
 end)
 
-local BuildDate = "April 25, 2026 - 12:32"
-print("Sailor Hub Loaded | Version: v1.7.2 | Build: " .. BuildDate)
-Window:Notify("Sailor Hub Loaded", "Version: v1.7.2\nBuild: " .. BuildDate)
+local BuildDate = "April 25, 2026 - 12:44"
+print("Sailor Hub Loaded | Version: v1.7.6 | Build: " .. BuildDate)
+Window:Notify("Sailor Hub Loaded", "Version: v1.7.6\nBuild: " .. BuildDate)
 
 -- Initial call (Optimized for Free Tier: Only 1 ping per session)
 task.spawn(function()
