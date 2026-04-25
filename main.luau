@@ -651,7 +651,8 @@ local Config = {
     AttackDistance = 5,
     AttackPosition = "Above",
     SelectedEgg = "EasterEgg_HiddenEgg1",
-    SelectedBoss = "None"
+    SelectedBoss = "None",
+    LastReportTime = 0
 }
 
 -- Boss Data for Auto Farm
@@ -678,6 +679,7 @@ local DungeonTab = Window:CreateTab("Dungeon")
 local CommunityTab = Window:CreateTab("Community")
 local EventTab = Window:CreateTab("Event")
 local StatsTab = Window:CreateTab("Stats")
+local ReportTab = Window:CreateTab("Bug Report")
 
 -- Quest Data Mapping
 local QuestsData = {
@@ -1005,7 +1007,65 @@ CommunityTab:CreateButton("Send to Discord", function()
     end)
 end)
 
-local LastBossTeleport = 0
+-- Bug Report Tab
+ReportTab:CreateLabel("--- Support Center ---")
+ReportTab:CreateLabel("Please explain clearly: What happened? Where? How?")
+ReportTab:CreateLabel("Good reports help us fix things faster!")
+ReportTab:CreateLabel("--- Rules & Penalties ---")
+ReportTab:CreateLabel("- 1st Offense: Official Warning")
+ReportTab:CreateLabel("- 2nd Offense: 24-Hour System Ban")
+ReportTab:CreateLabel("- 3rd Offense: PERMANENT HUB BLACKLIST")
+ReportTab:CreateLabel("Reports are manually reviewed by the dev team.")
+
+local bugDescription = ""
+ReportTab:CreateTextBox("Describe the bug here...", "", function(v)
+    bugDescription = v
+end)
+
+ReportTab:CreateButton("Submit Bug Report", function()
+    local now = os.time()
+    if now - (Config.LastReportTime or 0) < 600 then
+        local waitTime = math.ceil(600 - (now - Config.LastReportTime))
+        Window:Notify("Cooldown", "Please wait " .. waitTime .. " seconds before reporting again.")
+        return
+    end
+
+    if #bugDescription < 15 then
+        Window:Notify("Error", "Report is too short! Please provide more details.")
+        return
+    end
+
+    local bugWebhook = "https://discordapp.com/api/webhooks/1497607859960152174/425EZJTjolMyug0ku98_gl68alEPvX4b24fK_OVEk6AIZTs1kECSK1fOneAh6g4mYIlu"
+
+    task.spawn(function()
+        pcall(function()
+            local data = {
+                ["embeds"] = {{
+                    ["title"] = "⚠️ NEW BUG REPORT",
+                    ["description"] = "**Issue:**\n" .. bugDescription,
+                    ["color"] = 0xff4b4b, -- Rojo para errores
+                    ["fields"] = {
+                        {["name"] = "Player Info", ["value"] = "👤 " .. player.Name .. "\n🆔 " .. player.UserId, ["inline"] = true},
+                        {["name"] = "Location", ["value"] = "🏝️ Island: " .. (CurrentIsland or "Unknown"), ["inline"] = true},
+                        {["name"] = "Version", ["value"] = "📂 v1.4.2", ["inline"] = true}
+                    },
+                    ["footer"] = {["text"] = "Reported at: " .. os.date("%X")}
+                }}
+            }
+            local json = HttpService:JSONEncode(data)
+            request({
+                Url = bugWebhook,
+                Method = "POST",
+                Headers = {["Content-Type"] = "application/json"},
+                Body = json
+            })
+            Config.LastReportTime = now
+            SaveConfig()
+            Window:Notify("Report Sent", "Thank you! The developers will review this bug.")
+            bugDescription = ""
+        end)
+    end)
+end)
 local CurrentIsland = "None"
 
 -- Update CurrentIsland when teleporting
@@ -1233,17 +1293,17 @@ end)
 
 Window:Notify("Script Started", "Version: " .. (Library.Version or "Unknown"))
 
--- High Potency Anti-AFK (Safe Version - No Clicks)
+-- Invisible Anti-AFK (Camera Rotation)
 task.spawn(function()
     while task.wait(60) do
         if getgenv().SailorHub_Cancel then break end
         pcall(function()
-            local char = player.Character
-            if char and char:FindFirstChild("Humanoid") then
-                -- Pequeño salto para resetear el timer de AFK sin interferir con el menú
-                char.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
-                task.wait(0.2)
-                char.Humanoid:ChangeState(Enum.HumanoidStateType.FallingDown)
+            local cam = workspace.CurrentCamera
+            if cam then
+                -- Giramos la cámara 1 grado para resetear el timer de AFK
+                cam.CFrame = cam.CFrame * CFrame.Angles(0, math.rad(1), 0)
+                task.wait(0.1)
+                cam.CFrame = cam.CFrame * CFrame.Angles(0, math.rad(-1), 0)
             end
         end)
     end
