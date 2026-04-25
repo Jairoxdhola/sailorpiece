@@ -528,6 +528,7 @@ local QuestsData = {
     ["QuestNPC17"] = {Island="Judgement", Mobs={"Quincy1"}},
     ["QuestNPC18"] = {Island="Judgement", Mobs={"Ninja1"}},
     ["QuestNPC19"] = {Island="Lawless", Mobs={"ArenaFighter1"}},
+    ["Auto Farm Bunny"] = {Island="EasterIsland", Mobs={"Bunny1","Bunny2","Bunny3","Bunny4","Bunny5"}}
 }
 
 -- Remote Helper
@@ -575,9 +576,13 @@ end)
 -- Farm Tab (Quests & Farming)
 local questNPCs = {}
 for i = 1, 19 do table.insert(questNPCs, "Quest NPC "..i) end
+table.insert(questNPCs, "Auto Farm Bunny")
 
 FarmTab:CreateDropdown("Select Quest NPC", questNPCs, "Quest NPC 1", false, function(v)
-    local npcName = v:gsub("Quest NPC ", "QuestNPC")
+    local npcName = v
+    if v:find("Quest NPC ") then
+        npcName = v:gsub("Quest NPC ", "QuestNPC")
+    end
     Config.SelectedQuestNPC = npcName
     
     -- Auto Logic: Abandon -> Teleport -> Accept
@@ -587,7 +592,9 @@ FarmTab:CreateDropdown("Select Quest NPC", questNPCs, "Quest NPC 1", false, func
         if qd then
             TeleportToIsland(qd.Island)
             task.wait(1.5)
-            AcceptQuest(npcName)
+            if npcName ~= "Auto Farm Bunny" then
+                AcceptQuest(npcName)
+            end
         end
     end)
 end)
