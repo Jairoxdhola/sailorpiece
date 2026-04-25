@@ -632,6 +632,56 @@ function Library:CreateWindow(title, toggleKey)
             return tb_bg
         end
 
+        function tabObj:CreateDiscordCard(name, invite, members, online)
+            local dCard = Instance.new("Frame", container)
+            dCard.Size = UDim2.new(1,-10,0,80)
+            dCard.BackgroundColor3 = Color3.fromRGB(32,34,37)
+            dCard.BorderSizePixel = 0
+            Instance.new("UICorner", dCard).CornerRadius = UDim.new(0,8)
+
+            local dIcon = Instance.new("ImageLabel", dCard)
+            dIcon.Size = UDim2.new(0,50,0,50)
+            dIcon.Position = UDim2.new(0,10,0.5,-25)
+            dIcon.BackgroundColor3 = Color3.fromRGB(47,49,54)
+            dIcon.Image = "rbxassetid://10651235308"
+            Instance.new("UICorner", dIcon).CornerRadius = UDim.new(0,12)
+
+            local dTitle = Instance.new("TextLabel", dCard)
+            dTitle.Size = UDim2.new(1,-150,0,20)
+            dTitle.Position = UDim2.new(0,70,0,15)
+            dTitle.Text = name
+            dTitle.TextColor3 = Color3.new(1,1,1)
+            dTitle.TextSize = 15
+            dTitle.Font = Enum.Font.GothamBold
+            dTitle.TextXAlignment = Enum.TextXAlignment.Left
+            dTitle.BackgroundTransparency = 1
+
+            local dInfo = Instance.new("TextLabel", dCard)
+            dInfo.Size = UDim2.new(1,-150,0,20)
+            dInfo.Position = UDim2.new(0,70,0,35)
+            dInfo.Text = "🟢 "..online.." Online  ⚪ "..members.." Members"
+            dInfo.TextColor3 = Color3.fromRGB(185,187,190)
+            dInfo.TextSize = 11
+            dInfo.Font = Enum.Font.GothamMedium
+            dInfo.TextXAlignment = Enum.TextXAlignment.Left
+            dInfo.BackgroundTransparency = 1
+
+            local dJoin = Instance.new("TextButton", dCard)
+            dJoin.Size = UDim2.new(0,80,0,30)
+            dJoin.Position = UDim2.new(1,-90,0.5,-15)
+            dJoin.BackgroundColor3 = Color3.fromRGB(88,101,242)
+            dJoin.Text = "Join"
+            dJoin.TextColor3 = Color3.new(1,1,1)
+            dJoin.Font = Enum.Font.GothamBold
+            dJoin.TextSize = 13
+            Instance.new("UICorner", dJoin).CornerRadius = UDim.new(0,4)
+            dJoin.MouseButton1Click:Connect(function()
+                setclipboard(invite)
+                window:Notify("Discord", "Invite link copied to clipboard!")
+            end)
+            return dCard
+        end
+
         return tabObj
     end
 
@@ -1009,6 +1059,21 @@ FarmTab:CreateDropdown("Farm Specific Boss", bossNames, "None", false, function(
         end
     end
 end)
+CommunityTab:CreateLabel("--- Join our Community ---")
+CommunityTab:CreateLabel("Join my Discord to chat with other people,")
+CommunityTab:CreateLabel("get exclusive updates and support!")
+CommunityTab:CreateButton("Copy Community Invite", function()
+    setclipboard("https://discord.gg/Wxu4qVGKFd")
+    Window:Notify("Community", "Link copied! Join us to chat with others.")
+end)
+
+CommunityTab:CreateLabel("--- Premium Exploits ---")
+CommunityTab:CreateLabel("Need more power? Buy the best exploits here!")
+CommunityTab:CreateButton("Copy Store Invite", function()
+    setclipboard("https://discord.gg/MAWgDNfUtZ")
+    Window:Notify("Store", "Link copied! Best exploits are waiting for you.")
+end)
+
 CommunityTab:CreateLabel("--- Suggestions ---")
 local suggestionText = ""
 CommunityTab:CreateTextBox("Write your suggestion here...", "", function(v)
@@ -1111,6 +1176,11 @@ end)
 
 -- Changelog Tab
 ChangelogTab:CreateLabel("--- Latest Updates ---")
+ChangelogTab:CreateLabel("[v1.8.1] 1:30 PM - SIMPLIFIED Community (Buttons only)")
+ChangelogTab:CreateLabel("[v1.8.0] 1:28 PM - FIXED Discord Widget (Native Component)")
+ChangelogTab:CreateLabel("[v1.7.9] 1:26 PM - ADDED Custom Discord Widgets (Premium UI)")
+ChangelogTab:CreateLabel("[v1.7.8] 1:25 PM - ADDED Socials & Store (Discord)")
+ChangelogTab:CreateLabel("[v1.7.7] 1:21 PM - Added Discord Socials in Community")
 ChangelogTab:CreateLabel("[v1.7.6] 12:44 PM - FIXED Mobile Toggle Button visibility")
 ChangelogTab:CreateLabel("[v1.7.5] 12:43 PM - FIXED Loading Crash (Initialization Order)")
 ChangelogTab:CreateLabel("[v1.7.4] 12:41 PM - IMPROVED Loading UI (Menu hidden during load)")
@@ -1473,9 +1543,9 @@ task.spawn(function()
     end
 end)
 
-local BuildDate = "April 25, 2026 - 12:44"
-print("Sailor Hub Loaded | Version: v1.7.6 | Build: " .. BuildDate)
-Window:Notify("Sailor Hub Loaded", "Version: v1.7.6\nBuild: " .. BuildDate)
+local BuildDate = "April 25, 2026 - 1:30 PM"
+print("Sailor Hub Loaded | Version: v1.8.1 | Build: " .. BuildDate)
+Window:Notify("Sailor Hub Loaded", "Version: v1.8.1\nBuild: " .. BuildDate)
 
 -- Initial call (Optimized for Free Tier: Only 1 ping per session)
 task.spawn(function()
