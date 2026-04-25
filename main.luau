@@ -1345,9 +1345,9 @@ task.spawn(function()
     end
 end)
 
-local BuildDate = "April 25, 2026 - 11:10"
-print("Sailor Hub Loaded | Version: v1.4.8 | Build: " .. BuildDate)
-Window:Notify("Sailor Hub Loaded", "Version: v1.4.8\nBuild: " .. BuildDate)
+local BuildDate = "April 25, 2026 - 11:24"
+print("Sailor Hub Loaded | Version: v1.4.9 | Build: " .. BuildDate)
+Window:Notify("Sailor Hub Loaded", "Version: v1.4.9\nBuild: " .. BuildDate)
 
 -- Initial call (Optimized for Free Tier: Only 1 ping per session)
 task.spawn(function()
@@ -1528,6 +1528,8 @@ task.spawn(function()
                     end
 
                     if bossObj and bossObj:FindFirstChild("HumanoidRootPart") then
+                        player.Character.HumanoidRootPart.Velocity = Vector3.new(0,0,0)
+                        player.Character.HumanoidRootPart.RotVelocity = Vector3.new(0,0,0)
                         player.Character.HumanoidRootPart.CFrame = bossObj.HumanoidRootPart.CFrame * CFrame.new(0, Config.AttackDistance or 5, 0)
                     end
                 end)
