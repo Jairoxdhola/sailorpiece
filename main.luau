@@ -28,7 +28,7 @@ Library.Colors = {
     TogOff = Color3.fromRGB(45,45,65), TogOn = Color3.fromRGB(100,80,255),
 }
 local C = Library.Colors
-Library.Version = "v1.3.0 (Anti-AFK Pro)"
+Library.Version = "v1.4.0 (Live Stats)"
 
 function Library:CreateWindow(title, toggleKey)
     -- Loading Screen
@@ -191,6 +191,18 @@ function Library:CreateWindow(title, toggleKey)
     content.BorderSizePixel = 0
 
     local window = {gui = gui, main = main, content = content, side = side, tabs = {}, activeTab = nil}
+
+    -- User Count Label (Bottom Left)
+    local countLabel = Instance.new("TextLabel", main)
+    countLabel.Size = UDim2.new(0, 140, 0, 20)
+    countLabel.Position = UDim2.new(0, 5, 1, -25)
+    countLabel.BackgroundTransparency = 1
+    countLabel.Text = "Live Users: Loading..."
+    countLabel.TextColor3 = C.Sub
+    countLabel.TextSize = 10
+    countLabel.Font = Enum.Font.GothamMedium
+    countLabel.TextXAlignment = Enum.TextXAlignment.Left
+    window.UserCountLabel = countLabel
 
     function window:CreateTab(name)
         local page = Instance.new("ScrollingFrame", content)
@@ -913,6 +925,29 @@ task.spawn(function()
     end
 end)
 
-local BuildDate = "April 25, 2026 - 00:46"
+local BuildDate = "April 25, 2026 - 01:17"
 print("Sailor Hub Loaded | Version: " .. Library.Version .. " | Build: " .. BuildDate)
 Window:Notify("Sailor Hub Loaded", "Version: " .. Library.Version .. "\nBuild: " .. BuildDate)
+
+-- Live User Count Loop
+task.spawn(function()
+    local workerUrl = "https://sailor-hub.saraescobar0806.workers.dev/count"
+    local myId = player.UserId
+    
+    while task.wait(120) do -- Update every 2 minutes
+        if getgenv().SailorHub_Cancel then break end
+        pcall(function()
+            local count = game:HttpGet(workerUrl .. "?id=" .. myId)
+            if Window.UserCountLabel then
+                Window.UserCountLabel.Text = "Live Users: " .. count
+            end
+        end)
+    end
+end)
+-- Initial call
+task.spawn(function()
+    pcall(function()
+        local count = game:HttpGet("https://sailor-hub.saraescobar0806.workers.dev/count?id=" .. player.UserId)
+        if Window.UserCountLabel then Window.UserCountLabel.Text = "Live Users: " .. count end
+    end)
+end)
