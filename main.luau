@@ -820,7 +820,15 @@ local islands = {
 }
 
 TeleportTab:CreateDropdown("Select Island", islands, "Starter", false, function(v)
+    -- Si el usuario viaja manualmente, apagamos los farms para que no lo jalen de vuelta
+    Config.AutoFarm = false
+    Config.AutoFarmQuest = false
+    Config.AutoBossFarm = false
+    Config.SelectedBoss = "None"
+    SaveConfig()
+    
     TeleportToIsland(v)
+    Window:Notify("Teleport", "Traveling to: " .. v .. "\n(Auto Farm Disabled)")
 end)
 
 -- Dungeon Tab
@@ -1241,9 +1249,9 @@ task.spawn(function()
     end
 end)
 
-local BuildDate = "April 25, 2026 - 02:24"
-print("Sailor Hub Loaded | Version: " .. Library.Version .. " | Build: " .. BuildDate)
-Window:Notify("Sailor Hub Loaded", "Version: " .. Library.Version .. "\nBuild: " .. BuildDate)
+local BuildDate = "April 25, 2026 - 10:28"
+print("Sailor Hub Loaded | Version: v1.4.2 | Build: " .. BuildDate)
+Window:Notify("Sailor Hub Loaded", "Version: v1.4.2\nBuild: " .. BuildDate)
 
 -- Initial call (Optimized for Free Tier: Only 1 ping per session)
 task.spawn(function()
