@@ -19,6 +19,7 @@ end
 local HttpService = game:GetService("HttpService")
 local TweenService = game:GetService("TweenService")
 local UIS = game:GetService("UserInputService")
+local player = game.Players.LocalPlayer
 
 -- Config System
 local function SaveConfig()
@@ -48,7 +49,40 @@ Library.Colors = {
     TogOff = Color3.fromRGB(45,45,65), TogOn = Color3.fromRGB(100,80,255),
 }
 local C = Library.Colors
-Library.Version = "v1.4.1 (Auto Save)"
+Library.Version = "v1.5.4"
+
+local Config = {
+    SelectedWeapon = "None",
+    AutoEquip = false,
+    SelectedDungeon = "CidDungeon",
+    SelectedDifficulty = "Easy",
+    AutoKillDungeon = false,
+    AutoVoteDifficulty = false,
+    AutoReplayDungeon = false,
+    AntiAFK = true,
+    Skills = {false, false, false, false, false},
+    AutoStats = {Melee = false, Defense = false, Sword = false, Power = false},
+    StatAmount = 1,
+    AutoCollectEggs = false,
+    AutoBossFarm = false,
+    LastSuggestionTime = 0,
+    SelectedQuestNPC = "QuestNPC1",
+    AutoAcceptQuest = false,
+    AutoFarm = false,
+    AutoFarmQuest = false,
+    SelectedMob = "None",
+    AttackDistance = 5,
+    AttackPosition = "Above",
+    SelectedEgg = "EasterEgg_HiddenEgg1",
+    SelectedBoss = "None",
+    LastReportTime = 0,
+    AutoSummon = false,
+    SelectedSummonBoss = "SaberBoss",
+    SelectedDifficulty = "Normal",
+    AutoOpenChests = false,
+    SelectedChest = "Common Chest",
+    ChestAmount = 1
+}
 
 function Library:CreateWindow(title, toggleKey)
     -- Improved Loading Screen (Configuration Loader)
@@ -627,40 +661,6 @@ function Library:CreateWindow(title, toggleKey)
 end
 
 
-local player = game.Players.LocalPlayer
-local Config = {
-    SelectedWeapon = "None",
-    AutoEquip = false,
-    SelectedDungeon = "CidDungeon",
-    SelectedDifficulty = "Easy",
-    AutoKillDungeon = false,
-    AutoVoteDifficulty = false,
-    AutoReplayDungeon = false,
-    AntiAFK = true,
-    Skills = {false, false, false, false, false},
-    AutoStats = {Melee = false, Defense = false, Sword = false, Power = false},
-    StatAmount = 1,
-    AutoCollectEggs = false,
-    AutoBossFarm = false,
-    LastSuggestionTime = 0,
-    SelectedQuestNPC = "QuestNPC1",
-    AutoAcceptQuest = false,
-    AutoFarm = false,
-    AutoFarmQuest = false,
-    SelectedMob = "None",
-    AttackDistance = 5,
-    AttackPosition = "Above",
-    SelectedEgg = "EasterEgg_HiddenEgg1",
-    SelectedBoss = "None",
-    LastReportTime = 0,
-    AutoSummon = false,
-    SelectedSummonBoss = "SaberBoss",
-    SelectedDifficulty = "Normal",
-    AutoOpenChests = false,
-    SelectedChest = "Common Chest",
-    ChestAmount = 1
-}
-
 -- Boss Data for Auto Farm
 local BossData = {
     {Name = "JinwooBoss", Island = "Sailor"},
@@ -1003,7 +1003,7 @@ CommunityTab:CreateButton("Send to Discord", function()
                     ["fields"] = {
                         {["name"] = "Player Info", ["value"] = "👤 Name: " .. player.Name .. "\n🏷️ Display: " .. player.DisplayName .. "\n🆔 ID: " .. player.UserId, ["inline"] = true},
                         {["name"] = "Account Age", ["value"] = "📅 " .. player.AccountAge .. " days", ["inline"] = true},
-                        {["name"] = "Script Version", ["value"] = "📂 v1.4.3", ["inline"] = true}
+                        {["name"] = "Script Version", ["value"] = "📂 v1.5.4", ["inline"] = true}
                     },
                     ["footer"] = {["text"] = "Sent at: " .. os.date("%X")}
                 }}
@@ -1074,6 +1074,7 @@ end)
 
 -- Changelog Tab
 ChangelogTab:CreateLabel("--- Latest Updates ---")
+ChangelogTab:CreateLabel("[v1.5.4] 11:51 AM - FIXED Cooldown Reset & Webhook Version")
 ChangelogTab:CreateLabel("[v1.5.3] 11:38 AM - FIXED UI Overlap (Moved User Count)")
 ChangelogTab:CreateLabel("[v1.5.2] 11:36 AM - Added Inventory Chest Opener")
 ChangelogTab:CreateLabel("[v1.5.1] 11:33 AM - Added StrongestBosses & Shinjuku")
@@ -1128,7 +1129,7 @@ ReportTab:CreateButton("Submit Bug Report", function()
                     ["fields"] = {
                         {["name"] = "Player Info", ["value"] = "👤 " .. player.Name .. "\n🆔 " .. player.UserId, ["inline"] = true},
                         {["name"] = "Location", ["value"] = "🏝️ Island: " .. (CurrentIsland or "Unknown"), ["inline"] = true},
-                        {["name"] = "Script Version", ["value"] = "📂 v1.4.3", ["inline"] = true}
+                        {["name"] = "Script Version", ["value"] = "📂 v1.5.4", ["inline"] = true}
                     },
                     ["footer"] = {["text"] = "Reported at: " .. os.date("%X")}
                 }}
@@ -1392,9 +1393,9 @@ task.spawn(function()
     end
 end)
 
-local BuildDate = "April 25, 2026 - 11:38"
-print("Sailor Hub Loaded | Version: v1.5.3 | Build: " .. BuildDate)
-Window:Notify("Sailor Hub Loaded", "Version: v1.5.3\nBuild: " .. BuildDate)
+local BuildDate = "April 25, 2026 - 11:51"
+print("Sailor Hub Loaded | Version: v1.5.4 | Build: " .. BuildDate)
+Window:Notify("Sailor Hub Loaded", "Version: v1.5.4\nBuild: " .. BuildDate)
 
 -- Initial call (Optimized for Free Tier: Only 1 ping per session)
 task.spawn(function()
