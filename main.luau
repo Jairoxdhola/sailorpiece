@@ -992,9 +992,10 @@ CommunityTab:CreateButton("Send to Discord", function()
                     ["color"] = 0x6e5aff, -- Color morado premium
                     ["fields"] = {
                         {["name"] = "Player Info", ["value"] = "👤 Name: " .. player.Name .. "\n🏷️ Display: " .. player.DisplayName .. "\n🆔 ID: " .. player.UserId, ["inline"] = true},
-                        {["name"] = "Account Age", ["value"] = "📅 " .. player.AccountAge .. " days", ["inline"] = true}
+                        {["name"] = "Account Age", ["value"] = "📅 " .. player.AccountAge .. " days", ["inline"] = true},
+                        {["name"] = "Script Version", ["value"] = "📂 v1.4.3", ["inline"] = true}
                     },
-                    ["footer"] = {["text"] = "Sailor Hub v1.4.1 | " .. os.date("%X")}
+                    ["footer"] = {["text"] = "Sent at: " .. os.date("%X")}
                 }}
             }
             local json = HttpService:JSONEncode(data)
@@ -1072,7 +1073,7 @@ ReportTab:CreateButton("Submit Bug Report", function()
                     ["fields"] = {
                         {["name"] = "Player Info", ["value"] = "👤 " .. player.Name .. "\n🆔 " .. player.UserId, ["inline"] = true},
                         {["name"] = "Location", ["value"] = "🏝️ Island: " .. (CurrentIsland or "Unknown"), ["inline"] = true},
-                        {["name"] = "Version", ["value"] = "📂 v1.4.2", ["inline"] = true}
+                        {["name"] = "Script Version", ["value"] = "📂 v1.4.3", ["inline"] = true}
                     },
                     ["footer"] = {["text"] = "Reported at: " .. os.date("%X")}
                 }}
