@@ -574,7 +574,7 @@ local QuestsData = {
     ["QuestNPC14"] = {Island="Slime", Mobs={"Slime1","Slime2","Slime3","Slime4","Slime5"}},
     ["QuestNPC15"] = {Island="Academy", Mobs={"AcademyTeacher1","AcademyTeacher2","AcademyTeacher3","AcademyTeacher4","AcademyTeacher5"}},
     ["QuestNPC16"] = {Island="Judgement", Mobs={"Swordsman1","Swordsman2","Swordsman3","Swordsman4","Swordsman5"}},
-    ["QuestNPC17"] = {Island="Judgement", Mobs={"Quincy1","Quincy2","Quincy3","Quincy4","Quincy5"}},
+    ["QuestNPC17"] = {Island="SoulDominion", Mobs={"Quincy1","Quincy2","Quincy3","Quincy4","Quincy5"}},
     ["QuestNPC18"] = {Island="Ninja", Mobs={"Ninja1","Ninja2","Ninja3","Ninja4","Ninja5"}},
     ["QuestNPC19"] = {Island="Lawless", Mobs={"ArenaFighter1","ArenaFighter2","ArenaFighter3","ArenaFighter4","ArenaFighter5"}},
     ["Auto Farm Bunny"] = {Island="Easter", Mobs={"Bunny1","Bunny2","Bunny3","Bunny4","Bunny5"}}
