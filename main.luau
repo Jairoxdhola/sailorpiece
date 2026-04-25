@@ -10,6 +10,8 @@ if getgenv().SailorHub_FPS then
 end
 getgenv().SailorHub_Cancel = false
 getgenv().Config = nil -- Clear global config if any
+getgenv().CurrentIsland = "Unknown"
+getgenv().QuestAccepted = true -- Default to true so normal farm works
 
 -- Destroy old GUI if re-executing
 if game:GetService("CoreGui"):FindFirstChild("SailorHub") then
@@ -694,26 +696,26 @@ local ChangelogTab = Window:CreateTab("Changelog")
 
 -- Quest Data Mapping
 local QuestsData = {
-    ["QuestNPC1"] = {Island="Starter", Mobs={"Thief1","Thief2","Thief3","Thief4","Thief5"}},
+    ["QuestNPC1"] = {Island="Starter", Mobs={"Thief"}},
     ["QuestNPC2"] = {Island="Starter", Mobs={"ThiefBoss"}},
-    ["QuestNPC3"] = {Island="Jungle", Mobs={"Monkey1","Monkey2","Monkey3","Monkey4","Monkey5"}},
+    ["QuestNPC3"] = {Island="Jungle", Mobs={"Monkey"}},
     ["QuestNPC4"] = {Island="Jungle", Mobs={"MonkeyBoss"}},
-    ["QuestNPC5"] = {Island="Desert", Mobs={"DesertBandit1","DesertBandit2","DesertBandit3","DesertBandit4","DesertBandit5"}},
+    ["QuestNPC5"] = {Island="Desert", Mobs={"DesertBandit"}},
     ["QuestNPC6"] = {Island="Desert", Mobs={"DesertBoss"}},
-    ["QuestNPC7"] = {Island="Snow", Mobs={"FrostRogue1","FrostRogue2","FrostRogue3","FrostRogue4","FrostRogue5"}},
+    ["QuestNPC7"] = {Island="Snow", Mobs={"FrostRogue"}},
     ["QuestNPC8"] = {Island="Snow", Mobs={"SnowBoss"}},
-    ["QuestNPC9"] = {Island="Shibuya", Mobs={"Sorcerer1","Sorcerer2","Sorcerer3","Sorcerer4","Sorcerer5"}},
+    ["QuestNPC9"] = {Island="Shibuya", Mobs={"Sorcerer"}},
     ["QuestNPC10"] = {Island="Shibuya", Mobs={"PandaMiniBoss"}},
-    ["QuestNPC11"] = {Island="HollowIsland", Mobs={"Hollow1","Hollow2","Hollow3","Hollow4","Hollow5"}},
-    ["QuestNPC12"] = {Island="Shinjuku", Mobs={"StrongSorcerer1","StrongSorcerer2","StrongSorcerer3","StrongSorcerer4","StrongSorcerer5"}},
-    ["QuestNPC13"] = {Island="Shinjuku", Mobs={"Curse1","Curse2","Curse3","Curse4","Curse5"}},
-    ["QuestNPC14"] = {Island="Slime", Mobs={"Slime1","Slime2","Slime3","Slime4","Slime5"}},
-    ["QuestNPC15"] = {Island="Academy", Mobs={"AcademyTeacher1","AcademyTeacher2","AcademyTeacher3","AcademyTeacher4","AcademyTeacher5"}},
-    ["QuestNPC16"] = {Island="Judgement", Mobs={"Swordsman1","Swordsman2","Swordsman3","Swordsman4","Swordsman5"}},
-    ["QuestNPC17"] = {Island="SoulDominion", Mobs={"Quincy1","Quincy2","Quincy3","Quincy4","Quincy5"}},
-    ["QuestNPC18"] = {Island="Ninja", Mobs={"Ninja1","Ninja2","Ninja3","Ninja4","Ninja5"}},
-    ["QuestNPC19"] = {Island="Lawless", Mobs={"ArenaFighter1","ArenaFighter2","ArenaFighter3","ArenaFighter4","ArenaFighter5"}},
-    ["Auto Farm Bunny"] = {Island="Easter", Mobs={"Bunny1","Bunny2","Bunny3","Bunny4","Bunny5"}}
+    ["QuestNPC11"] = {Island="HollowIsland", Mobs={"Hollow"}},
+    ["QuestNPC12"] = {Island="Shinjuku", Mobs={"StrongSorcerer"}},
+    ["QuestNPC13"] = {Island="Shinjuku", Mobs={"Curse"}},
+    ["QuestNPC14"] = {Island="Slime", Mobs={"Slime"}},
+    ["QuestNPC15"] = {Island="Academy", Mobs={"AcademyTeacher"}},
+    ["QuestNPC16"] = {Island="Judgement", Mobs={"Swordsman"}},
+    ["QuestNPC17"] = {Island="SoulDominion", Mobs={"Quincy"}},
+    ["QuestNPC18"] = {Island="Ninja", Mobs={"Ninja"}},
+    ["QuestNPC19"] = {Island="Lawless", Mobs={"ArenaFighter"}},
+    ["Auto Farm Bunny"] = {Island="Easter", Mobs={"Bunny"}}
 }
 
 -- Remote Helper
@@ -732,13 +734,9 @@ local function AbandonQuest()
 end
 
 local function TeleportToIsland(island)
-    if island == "SoulDominion" or island == "Shinjuku" then
-        local r = GetRemote("Remotes", "TeleportToPortal")
-        if r then r:FireServer(island) end
-    else
-        local r = GetRemote("Remotes", "TeleportToIsland")
-        if r then r:FireServer(island) end
-    end
+    getgenv().CurrentIsland = island
+    local r = GetRemote("Remotes", "TeleportToPortal")
+    if r then r:FireServer(island) end
 end
 
 local function AcceptQuest(npc)
@@ -813,21 +811,41 @@ FarmTab:CreateDropdown("Select Quest NPC", questNPCs, Config.SelectedQuestNPC or
     
     -- Auto Logic: Abandon -> Teleport -> Accept
     task.spawn(function()
+        getgenv().QuestAccepted = false -- Pause attack
         AbandonQuest()
         local qd = QuestsData[npcName]
         if qd then
             TeleportToIsland(qd.Island)
-            task.wait(1.5)
+            task.wait(2)
             if npcName ~= "Auto Farm Bunny" then
                 AcceptQuest(npcName)
+                task.wait(1)
             end
         end
+        getgenv().QuestAccepted = true -- Resume attack
     end)
 end)
 
 FarmTab:CreateToggle("Auto Farm Selected Quest", Config.AutoFarmQuest, function(v)
     Config.AutoFarmQuest = v
     SaveConfig()
+    if v then
+        task.spawn(function()
+            getgenv().QuestAccepted = false
+            local npcName = Config.SelectedQuestNPC
+            AbandonQuest()
+            local qd = QuestsData[npcName]
+            if qd then
+                TeleportToIsland(qd.Island)
+                task.wait(2)
+                if npcName ~= "Auto Farm Bunny" then
+                    AcceptQuest(npcName)
+                    task.wait(1)
+                end
+            end
+            getgenv().QuestAccepted = true
+        end)
+    end
 end)
 
 -- Teleport Selection
@@ -1086,6 +1104,13 @@ end)
 
 -- Changelog Tab
 ChangelogTab:CreateLabel("--- Latest Updates ---")
+ChangelogTab:CreateLabel("[v1.7.0] 12:30 PM - FIXED Atomic Boss Island (Lawless)")
+ChangelogTab:CreateLabel("[v1.6.9] 12:28 PM - FIXED StrongestBosses TP & Targeting")
+ChangelogTab:CreateLabel("[v1.6.8] 12:25 PM - FIXED Quest Logic Sequence (Accept then Attack)")
+ChangelogTab:CreateLabel("[v1.6.7] 12:23 PM - FIXED ALL Island TPs (Official List)")
+ChangelogTab:CreateLabel("[v1.6.6] 12:19 PM - FIXED Island Names in QuestsData (TP fix)")
+ChangelogTab:CreateLabel("[v1.6.5] 12:17 PM - FIXED Auto Farm Quest (Auto Island Travel)")
+ChangelogTab:CreateLabel("[v1.6.4] 12:16 PM - FIXED Auto Farm Quest (Fuzzy targeting)")
 ChangelogTab:CreateLabel("[v1.6.3] 12:14 PM - FIXED Movement Lock when farm is off")
 ChangelogTab:CreateLabel("[v1.6.2] 12:05 PM - FIXED Auto-Save (UI Visuals) & Shaking bug")
 ChangelogTab:CreateLabel("[v1.6.1] 12:02 PM - Added Auto Kill for Infinite Tower")
@@ -1201,17 +1226,22 @@ local function GetTarget()
         if not mobList then return true end
         local name = v.Name:lower()
         for _, mobName in ipairs(mobList) do
-            if name:find(mobName:lower(), 1, true) then return true end
+            local targetMobName = mobName:lower()
+            -- Búsqueda flexible: que el nombre del NPC contenga el mobName O VICEVERSA
+            if name:find(targetMobName, 1, true) or targetMobName:find(name, 1, true) then 
+                return true 
+            end
         end
         return false
     end
 
     local mobsToSearch = nil
     if Config.AutoSummon then
-        mobsToSearch = {Config.SelectedSummonBoss, "SaberBoss", "QinShi", "Ichigo", "Gilgamesh", "Maiden", "Alter", "Moon", "Queen"}
+        mobsToSearch = {Config.SelectedSummonBoss, "Saber", "QinShi", "Ichigo", "Gilgamesh", "Maiden", "Alter", "Moon", "Queen", "Strongest", "Atomic", "GreatMage", "TrueAizen"}
     elseif Config.AutoKillDungeon then
         mobsToSearch = nil
     elseif Config.AutoFarmQuest then
+        if not getgenv().QuestAccepted then return nil end
         local qd = QuestsData[Config.SelectedQuestNPC]
         if qd then mobsToSearch = qd.Mobs end
     elseif Config.AutoBossFarm or Config.SelectedBoss ~= "None" then
@@ -1414,9 +1444,9 @@ task.spawn(function()
     end
 end)
 
-local BuildDate = "April 25, 2026 - 12:14"
-print("Sailor Hub Loaded | Version: v1.6.3 | Build: " .. BuildDate)
-Window:Notify("Sailor Hub Loaded", "Version: v1.6.3\nBuild: " .. BuildDate)
+local BuildDate = "April 25, 2026 - 12:30"
+print("Sailor Hub Loaded | Version: v1.7.0 | Build: " .. BuildDate)
+Window:Notify("Sailor Hub Loaded", "Version: v1.7.0\nBuild: " .. BuildDate)
 
 -- Initial call (Optimized for Free Tier: Only 1 ping per session)
 task.spawn(function()
@@ -1570,7 +1600,8 @@ task.spawn(function()
                 local targetIsland = "Sailor"
                 if bName == "GreatMage" then targetIsland = "Easter"
                 elseif bName == "TrueAizen" then targetIsland = "SoulDominion"
-                elseif bName == "StrongestToday" or bName == "StrongestHistory" then targetIsland = "Shinjuku" end
+                elseif bName == "StrongestToday" or bName == "StrongestHistory" then targetIsland = "Shinjuku"
+                elseif bName == "Atomic" then targetIsland = "Lawless" end
                 
                 if CurrentIsland ~= targetIsland then
                     TeleportToIsland(targetIsland)
@@ -1642,6 +1673,19 @@ task.spawn(function()
             pcall(function()
                 game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("DungeonWaveVote"):FireServer("start")
             end)
+        end
+    end
+end)
+
+-- Auto Quest Island Keeper
+task.spawn(function()
+    while task.wait(5) do
+        if getgenv().SailorHub_Cancel then break end
+        if Config.AutoFarmQuest then
+            local qd = QuestsData[Config.SelectedQuestNPC]
+            if qd and getgenv().CurrentIsland ~= qd.Island then
+                TeleportToIsland(qd.Island)
+            end
         end
     end
 end)
