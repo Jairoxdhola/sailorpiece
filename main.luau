@@ -725,8 +725,13 @@ local function AbandonQuest()
 end
 
 local function TeleportToIsland(island)
-    local r = GetRemote("Remotes", "TeleportToPortal")
-    if r then r:FireServer(island) end
+    if island == "SoulDominion" then
+        local r = GetRemote("Remotes", "TeleportToPortal")
+        if r then r:FireServer(island) end
+    else
+        local r = GetRemote("Remotes", "TeleportToIsland")
+        if r then r:FireServer(island) end
+    end
 end
 
 local function AcceptQuest(npc)
@@ -822,7 +827,7 @@ end)
 local islands = {
     "Starter", "Jungle", "Desert", "Snow", "Sailor", "Shibuya", "HollowIsland", 
     "Boss", "Dungeon", "Shinjuku", "Slime", "Academy", "Judgement", "Ninja", 
-    "Lawless", "Tower", "Easter", "World"
+    "Lawless", "Tower", "Easter", "World", "SoulDominion"
 }
 
 TeleportTab:CreateDropdown("Select Island", islands, "Starter", false, function(v)
@@ -1019,7 +1024,7 @@ SummonTab:CreateToggle("Enable Auto Summon", false, function(v)
     SaveConfig()
 end)
 
-local summonBosses = {"SaberBoss", "QinShiBoss", "IchigoBoss", "GilgameshBoss", "BlessedMaidenBoss", "SaberAlterBoss", "MoonSlayerBoss", "IceQueenBoss"}
+local summonBosses = {"SaberBoss", "QinShiBoss", "IchigoBoss", "GilgameshBoss", "BlessedMaidenBoss", "SaberAlterBoss", "MoonSlayerBoss", "IceQueenBoss", "GreatMage", "TrueAizen"}
 SummonTab:CreateDropdown("Select Boss", summonBosses, "SaberBoss", false, function(v)
     Config.SelectedSummonBoss = v
     SaveConfig()
@@ -1031,7 +1036,10 @@ SummonTab:CreateDropdown("Select Difficulty", difficulties, "Normal", false, fun
     SaveConfig()
 end)
 
-SummonTab:CreateLabel("Note: All bosses spawn on Sailor Island.")
+SummonTab:CreateLabel("--- Boss Locations ---")
+SummonTab:CreateLabel("🏝️ Soul Dominion: TrueAizen")
+SummonTab:CreateLabel("🏝️ Easter Island: GreatMage")
+SummonTab:CreateLabel("🏝️ Sailor Island: All Others")
 
 -- Bug Report Tab
 ReportTab:CreateLabel("--- Support Center ---")
@@ -1337,9 +1345,9 @@ task.spawn(function()
     end
 end)
 
-local BuildDate = "April 25, 2026 - 10:57"
-print("Sailor Hub Loaded | Version: v1.4.3 | Build: " .. BuildDate)
-Window:Notify("Sailor Hub Loaded", "Version: v1.4.3\nBuild: " .. BuildDate)
+local BuildDate = "April 25, 2026 - 11:10"
+print("Sailor Hub Loaded | Version: v1.4.8 | Build: " .. BuildDate)
+Window:Notify("Sailor Hub Loaded", "Version: v1.4.8\nBuild: " .. BuildDate)
 
 -- Initial call (Optimized for Free Tier: Only 1 ping per session)
 task.spawn(function()
@@ -1457,35 +1465,68 @@ task.spawn(function()
             local bName = Config.SelectedSummonBoss
             local diff = Config.SelectedDifficulty
             
+            -- Nombre dinámico para GreatMage y TrueAizen
+            local checkName = bName
+            if bName == "GreatMage" then
+                checkName = "GreatMageBoss_" .. diff
+            elseif bName == "TrueAizen" then
+                checkName = "TrueAizenBoss_" .. diff
+            end
+
             -- Verificar si el Boss ya está vivo
             local alive = false
             pcall(function()
-                local bossObj = workspace.NPCs:FindFirstChild(bName)
-                if bossObj and bossObj:FindFirstChild("Humanoid") and bossObj.Humanoid.Health > 0 then
+                local bossObj = workspace.NPCs:FindFirstChild(checkName)
+                if not bossObj then -- Buscar por nombre parcial si no es exacto
+                    for _, v in ipairs(workspace.NPCs:GetChildren()) do
+                        if v.Name:find(checkName) and v:FindFirstChild("Humanoid") and v.Humanoid.Health > 0 then
+                            bossObj = v
+                            alive = true
+                            break
+                        end
+                    end
+                elseif bossObj:FindFirstChild("Humanoid") and bossObj.Humanoid.Health > 0 then
                     alive = true
                 end
             end)
             
             if not alive then
-                -- Si no está vivo, ir a Sailor Island e invocar
-                if CurrentIsland ~= "Sailor" then
-                    TeleportToIsland("Sailor")
+                -- Si no está vivo, ir a la isla correcta
+                local targetIsland = "Sailor"
+                if bName == "GreatMage" then targetIsland = "Easter"
+                elseif bName == "TrueAizen" then targetIsland = "SoulDominion" end
+                
+                if CurrentIsland ~= targetIsland then
+                    TeleportToIsland(targetIsland)
                     task.wait(3)
                 end
                 
                 pcall(function()
-                    local remote = game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("RequestSummonBoss")
-                    if bName == "SaberBoss" or bName == "QinShiBoss" or bName == "IchigoBoss" then
-                        remote:FireServer(bName)
+                    if bName == "GreatMage" then
+                        game:GetService("ReplicatedStorage"):WaitForChild("RemoteEvents"):WaitForChild("RequestSpawnGreatMage"):FireServer(diff)
+                    elseif bName == "TrueAizen" then
+                        game:GetService("ReplicatedStorage"):WaitForChild("RemoteEvents"):WaitForChild("RequestSpawnTrueAizen"):FireServer(diff)
                     else
-                        remote:FireServer(bName, diff)
+                        local remote = game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("RequestSummonBoss")
+                        if bName == "SaberBoss" or bName == "QinShiBoss" or bName == "IchigoBoss" then
+                            remote:FireServer(bName)
+                        else
+                            remote:FireServer(bName, diff)
+                        end
                     end
                 end)
-                task.wait(2) -- Esperar un poco
+                task.wait(2)
             else
                 -- El Boss ya está vivo, forzamos el TP a él para asegurar el ataque
                 pcall(function()
-                    local bossObj = workspace.NPCs:FindFirstChild(bName)
+                    local bossObj = workspace.NPCs:FindFirstChild(checkName)
+                    -- Si no lo encontró por nombre exacto, buscarlo de nuevo
+                    if not bossObj then
+                        for _, v in ipairs(workspace.NPCs:GetChildren()) do
+                            if v.Name:find(checkName) then bossObj = v break end
+                        end
+                    end
+
                     if bossObj and bossObj:FindFirstChild("HumanoidRootPart") then
                         player.Character.HumanoidRootPart.CFrame = bossObj.HumanoidRootPart.CFrame * CFrame.new(0, Config.AttackDistance or 5, 0)
                     end
