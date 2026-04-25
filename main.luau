@@ -255,16 +255,16 @@ function Library:CreateWindow(title, toggleKey)
 
     local window = {gui = gui, main = main, content = content, side = side, tabs = {}, activeTab = nil}
 
-    -- User Count Label (Bottom Left)
-    local countLabel = Instance.new("TextLabel", main)
-    countLabel.Size = UDim2.new(0, 140, 0, 20)
-    countLabel.Position = UDim2.new(0, 5, 1, -25)
+    -- User Count Label (Top Bar - Right Side)
+    local countLabel = Instance.new("TextLabel", top)
+    countLabel.Size = UDim2.new(0, 100, 1, 0)
+    countLabel.Position = UDim2.new(1, -145, 0, 0)
     countLabel.BackgroundTransparency = 1
-    countLabel.Text = "Live Users: Loading..."
+    countLabel.Text = "Recent Users: ..."
     countLabel.TextColor3 = C.Sub
     countLabel.TextSize = 10
     countLabel.Font = Enum.Font.GothamMedium
-    countLabel.TextXAlignment = Enum.TextXAlignment.Left
+    countLabel.TextXAlignment = Enum.TextXAlignment.Right
     window.UserCountLabel = countLabel
 
     function window:CreateTab(name)
@@ -655,7 +655,10 @@ local Config = {
     LastReportTime = 0,
     AutoSummon = false,
     SelectedSummonBoss = "SaberBoss",
-    SelectedDifficulty = "Normal"
+    SelectedDifficulty = "Normal",
+    AutoOpenChests = false,
+    SelectedChest = "Common Chest",
+    ChestAmount = 1
 }
 
 -- Boss Data for Auto Farm
@@ -683,6 +686,7 @@ local CommunityTab = Window:CreateTab("Community")
 local EventTab = Window:CreateTab("Event")
 local StatsTab = Window:CreateTab("Stats")
 local SummonTab = Window:CreateTab("Summon Boss")
+local ChestTab = Window:CreateTab("Chest Opener")
 local ReportTab = Window:CreateTab("Bug Report")
 local ChangelogTab = Window:CreateTab("Changelog")
 
@@ -1043,8 +1047,35 @@ SummonTab:CreateLabel("🏝️ Soul Dominion: TrueAizen")
 SummonTab:CreateLabel("🏝️ Easter Island: GreatMage")
 SummonTab:CreateLabel("🏝️ Sailor Island: All Others")
 
+-- Chest Opener Tab
+ChestTab:CreateLabel("--- Inventory Chest Opener ---")
+ChestTab:CreateToggle("Auto Open Chests", false, function(v)
+    Config.AutoOpenChests = v
+    SaveConfig()
+end)
+
+local chestList = {"Common Chest", "Rare Chest", "Epic Chest", "Legendary Chest", "Mythical Chest"}
+ChestTab:CreateDropdown("Select Chest", chestList, "Common Chest", false, function(v)
+    Config.SelectedChest = v
+    SaveConfig()
+end)
+
+ChestTab:CreateTextBox("Amount to Open", "1", function(v)
+    Config.ChestAmount = tonumber(v) or 1
+    SaveConfig()
+end)
+
+ChestTab:CreateButton("Open Manually", function()
+    pcall(function()
+        game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("UseItem"):FireServer("Use", Config.SelectedChest, Config.ChestAmount, false, false)
+    end)
+    Window:Notify("Chests", "Opening " .. Config.ChestAmount .. "x " .. Config.SelectedChest)
+end)
+
 -- Changelog Tab
 ChangelogTab:CreateLabel("--- Latest Updates ---")
+ChangelogTab:CreateLabel("[v1.5.3] 11:38 AM - FIXED UI Overlap (Moved User Count)")
+ChangelogTab:CreateLabel("[v1.5.2] 11:36 AM - Added Inventory Chest Opener")
 ChangelogTab:CreateLabel("[v1.5.1] 11:33 AM - Added StrongestBosses & Shinjuku")
 ChangelogTab:CreateLabel("[v1.5.0] 11:26 AM - Added Changelog system")
 ChangelogTab:CreateLabel("[v1.4.9] 11:24 AM - FIXED Fling bug (Physics Stabilizer)")
@@ -1361,9 +1392,9 @@ task.spawn(function()
     end
 end)
 
-local BuildDate = "April 25, 2026 - 11:33"
-print("Sailor Hub Loaded | Version: v1.5.1 | Build: " .. BuildDate)
-Window:Notify("Sailor Hub Loaded", "Version: v1.5.1\nBuild: " .. BuildDate)
+local BuildDate = "April 25, 2026 - 11:38"
+print("Sailor Hub Loaded | Version: v1.5.3 | Build: " .. BuildDate)
+Window:Notify("Sailor Hub Loaded", "Version: v1.5.3\nBuild: " .. BuildDate)
 
 -- Initial call (Optimized for Free Tier: Only 1 ping per session)
 task.spawn(function()
@@ -1557,6 +1588,17 @@ task.spawn(function()
                     end
                 end)
             end
+        end
+    end
+end)
+-- Auto Chest Opener Loop
+task.spawn(function()
+    while task.wait(1) do
+        if getgenv().SailorHub_Cancel then break end
+        if Config.AutoOpenChests then
+            pcall(function()
+                game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("UseItem"):FireServer("Use", Config.SelectedChest, Config.ChestAmount, false, false)
+            end)
         end
     end
 end)
