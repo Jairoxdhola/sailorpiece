@@ -1336,9 +1336,9 @@ task.spawn(function()
     end
 end)
 
-local BuildDate = "April 25, 2026 - 10:28"
-print("Sailor Hub Loaded | Version: v1.4.2 | Build: " .. BuildDate)
-Window:Notify("Sailor Hub Loaded", "Version: v1.4.2\nBuild: " .. BuildDate)
+local BuildDate = "April 25, 2026 - 10:57"
+print("Sailor Hub Loaded | Version: v1.4.3 | Build: " .. BuildDate)
+Window:Notify("Sailor Hub Loaded", "Version: v1.4.3\nBuild: " .. BuildDate)
 
 -- Initial call (Optimized for Free Tier: Only 1 ping per session)
 task.spawn(function()
