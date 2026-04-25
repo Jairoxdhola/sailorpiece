@@ -16,9 +16,29 @@ if game:GetService("CoreGui"):FindFirstChild("SailorHub") then
     game:GetService("CoreGui"):FindFirstChild("SailorHub"):Destroy()
 end
 
-local Library = loadstring([[
+local HttpService = game:GetService("HttpService")
 local TweenService = game:GetService("TweenService")
 local UIS = game:GetService("UserInputService")
+
+-- Config System
+local function SaveConfig()
+    pcall(function()
+        local str = HttpService:JSONEncode(Config)
+        writefile("SailorHub_Config.json", str)
+    end)
+end
+
+local function LoadConfig()
+    pcall(function()
+        if isfile("SailorHub_Config.json") then
+            local data = HttpService:JSONDecode(readfile("SailorHub_Config.json"))
+            for i, v in pairs(data) do
+                Config[i] = v
+            end
+        end
+    end)
+end
+
 local Library = {}
 Library.Colors = {
     BG = Color3.fromRGB(18,18,28), Sidebar = Color3.fromRGB(22,22,35),
@@ -28,35 +48,78 @@ Library.Colors = {
     TogOff = Color3.fromRGB(45,45,65), TogOn = Color3.fromRGB(100,80,255),
 }
 local C = Library.Colors
-Library.Version = "v1.4.0 (Live Stats)"
+Library.Version = "v1.4.1 (Auto Save)"
 
 function Library:CreateWindow(title, toggleKey)
-    -- Loading Screen
-    local sg = Instance.new("ScreenGui", game:GetService("CoreGui"))
-    local load = Instance.new("Frame", sg)
-    load.Size = UDim2.new(0,300,0,100)
-    load.Position = UDim2.new(0.5,-150,0.5,-50)
-    load.BackgroundColor3 = C.BG
-    load.BorderSizePixel = 0
-    Instance.new("UICorner", load).CornerRadius = UDim.new(0,10)
-    local ll = Instance.new("TextLabel", load)
-    ll.Size = UDim2.new(1,0,0,40)
-    ll.BackgroundTransparency = 1
-    ll.Text = "Sailor Hub Loading..."
-    ll.TextColor3 = C.Text
-    ll.Font = Enum.Font.GothamBold
-    ll.TextSize = 15
-    local bar = Instance.new("Frame", load)
-    bar.Size = UDim2.new(0.8,0,0,4)
-    bar.Position = UDim2.new(0.1,0,0.7,0)
-    bar.BackgroundColor3 = C.Elem
-    local fill = Instance.new("Frame", bar)
-    fill.Size = UDim2.new(0,0,1,0)
-    fill.BackgroundColor3 = C.Accent
+    -- Improved Loading Screen (Configuration Loader)
+    local loader = Instance.new("Frame", gui)
+    loader.Size = UDim2.new(1,0,1,0)
+    loader.BackgroundColor3 = Color3.fromRGB(10,10,15)
+    loader.ZIndex = 10000
     
-    TweenService:Create(fill, TweenInfo.new(1.5), {Size = UDim2.new(1,0,1,0)}):Play()
-    task.wait(1.6)
-    sg:Destroy()
+    local blur = Instance.new("BlurEffect", game:GetService("Lighting"))
+    blur.Size = 20
+
+    local lcontent = Instance.new("Frame", loader)
+    lcontent.Size = UDim2.new(0,300,0,100)
+    lcontent.Position = UDim2.new(0.5,-150,0.5,-50)
+    lcontent.BackgroundTransparency = 1
+
+    local ltitle = Instance.new("TextLabel", lcontent)
+    ltitle.Size = UDim2.new(1,0,0,30)
+    ltitle.Text = "SAILOR HUB"
+    ltitle.TextColor3 = C.Accent
+    ltitle.TextSize = 24
+    ltitle.Font = Enum.Font.GothamBold
+    ltitle.BackgroundTransparency = 1
+
+    local lstatus = Instance.new("TextLabel", lcontent)
+    lstatus.Size = UDim2.new(1,0,0,20)
+    lstatus.Position = UDim2.new(0,0,0,35)
+    lstatus.Text = "Initializing UI..."
+    lstatus.TextColor3 = C.Sub
+    lstatus.TextSize = 12
+    lstatus.Font = Enum.Font.GothamMedium
+    lstatus.BackgroundTransparency = 1
+
+    local lbar_bg = Instance.new("Frame", lcontent)
+    lbar_bg.Size = UDim2.new(1,0,0,4)
+    lbar_bg.Position = UDim2.new(0,0,0,65)
+    lbar_bg.BackgroundColor3 = C.Elem
+    Instance.new("UICorner", lbar_bg)
+
+    local lbar = Instance.new("Frame", lbar_bg)
+    lbar.Size = UDim2.new(0,0,1,0)
+    lbar.BackgroundColor3 = C.Accent
+    Instance.new("UICorner", lbar)
+
+    -- Background Loading Logic
+    task.spawn(function()
+        local steps = {
+            {txt = "Checking Server Connection...", val = 0.25, fn = function() end},
+            {txt = "Loading Configuration...", val = 0.5, fn = function() LoadConfig() end},
+            {txt = "Building Components...", val = 0.75, fn = function() end},
+            {txt = "Ready to Farm!", val = 1.0, fn = function() end}
+        }
+
+        for _, step in ipairs(steps) do
+            lstatus.Text = step.txt
+            TweenService:Create(lbar, TweenInfo.new(0.3), {Size = UDim2.new(step.val,0,1,0)}):Play()
+            step.fn()
+            task.wait(0.4)
+        end
+
+        TweenService:Create(loader, TweenInfo.new(0.5), {BackgroundTransparency = 1}):Play()
+        TweenService:Create(lstatus, TweenInfo.new(0.5), {TextTransparency = 1}):Play()
+        TweenService:Create(ltitle, TweenInfo.new(0.5), {TextTransparency = 1}):Play()
+        TweenService:Create(lbar_bg, TweenInfo.new(0.5), {BackgroundTransparency = 1}):Play()
+        TweenService:Create(lbar, TweenInfo.new(0.5), {BackgroundTransparency = 1}):Play()
+        TweenService:Create(blur, TweenInfo.new(0.5), {Size = 0}):Play()
+        task.wait(0.6)
+        loader:Destroy()
+        blur:Destroy()
+    end)
+
 
     print("Sailor UI Loaded: " .. Library.Version)
     local gui = Instance.new("ScreenGui")
@@ -524,8 +587,7 @@ function Library:CreateWindow(title, toggleKey)
     return window
 end
 
-return Library
-]])()
+
 local Window = Library:CreateWindow("Sailor Piece Hub", Enum.KeyCode.K)
 
 local player = game.Players.LocalPlayer
@@ -608,26 +670,30 @@ end
 -- Combat Tab (Weapons & Attack)
 local _, weaponDropdownObj = MainTab:CreateDropdown("Select Weapon", {"None"}, "None", false, function(v)
     Config.SelectedWeapon = v
+    SaveConfig()
 end)
 
 MainTab:CreateToggle("Auto Equip", false, function(v)
     Config.AutoEquip = v
+    SaveConfig()
 end)
 
 MainTab:CreateDropdown("Attack Position", {"Above", "Below", "Behind"}, "Above", false, function(v)
     Config.AttackPosition = v
+    SaveConfig()
 end)
 
 MainTab:CreateSlider("Attack Distance", 1, 15, 5, " m", function(v)
     Config.AttackDistance = v
+    SaveConfig()
 end)
 
 MainTab:CreateLabel("--- Auto Skills ---")
-MainTab:CreateToggle("Auto Z (Skill 1)", false, function(v) Config.Skills[1] = v end)
-MainTab:CreateToggle("Auto X (Skill 2)", false, function(v) Config.Skills[2] = v end)
-MainTab:CreateToggle("Auto C (Skill 3)", false, function(v) Config.Skills[3] = v end)
-MainTab:CreateToggle("Auto V (Skill 4)", false, function(v) Config.Skills[4] = v end)
-MainTab:CreateToggle("Auto F (Skill 5)", false, function(v) Config.Skills[5] = v end)
+MainTab:CreateToggle("Auto Z (Skill 1)", false, function(v) Config.Skills[1] = v; SaveConfig() end)
+MainTab:CreateToggle("Auto X (Skill 2)", false, function(v) Config.Skills[2] = v; SaveConfig() end)
+MainTab:CreateToggle("Auto C (Skill 3)", false, function(v) Config.Skills[3] = v; SaveConfig() end)
+MainTab:CreateToggle("Auto V (Skill 4)", false, function(v) Config.Skills[4] = v; SaveConfig() end)
+MainTab:CreateToggle("Auto F (Skill 5)", false, function(v) Config.Skills[5] = v; SaveConfig() end)
 
 MainTab:CreateLabel("--- Codes ---")
 MainTab:CreateButton("Redeem All Codes", function()
@@ -664,6 +730,7 @@ FarmTab:CreateDropdown("Select Quest NPC", questNPCs, "Quest NPC 1", false, func
         npcName = v:gsub("Quest NPC ", "QuestNPC")
     end
     Config.SelectedQuestNPC = npcName
+    SaveConfig()
     
     -- Auto Logic: Abandon -> Teleport -> Accept
     task.spawn(function()
@@ -681,6 +748,7 @@ end)
 
 FarmTab:CreateToggle("Auto Farm Selected Quest", false, function(v)
     Config.AutoFarmQuest = v
+    SaveConfig()
 end)
 
 -- Teleport Selection
@@ -721,14 +789,17 @@ end)
 
 DungeonTab:CreateToggle("Auto Kill Dungeon", false, function(v)
     Config.AutoKillDungeon = v
+    SaveConfig()
 end)
 
 DungeonTab:CreateToggle("Auto Vote Difficulty", false, function(v)
     Config.AutoVoteDifficulty = v
+    SaveConfig()
 end)
 
 DungeonTab:CreateToggle("Auto Replay Dungeon", false, function(v)
     Config.AutoReplayDungeon = v
+    SaveConfig()
 end)
 
 local LastBossTeleport = 0
@@ -952,7 +1023,7 @@ task.spawn(function()
     end
 end)
 
-local BuildDate = "April 25, 2026 - 01:17"
+local BuildDate = "April 25, 2026 - 02:24"
 print("Sailor Hub Loaded | Version: " .. Library.Version .. " | Build: " .. BuildDate)
 Window:Notify("Sailor Hub Loaded", "Version: " .. Library.Version .. "\nBuild: " .. BuildDate)
 
@@ -961,7 +1032,11 @@ task.spawn(function()
     pcall(function()
         local count = game:HttpGet("https://sailor-hub.saraescobar0806.workers.dev/count?id=" .. player.UserId)
         if Window.UserCountLabel then 
-            Window.UserCountLabel.Text = "Recent Users: " .. count 
+            if #count < 10 then -- Check if it's a number, not a long HTML error
+                Window.UserCountLabel.Text = "Recent Users: " .. count 
+            else
+                Window.UserCountLabel.Text = "Recent Users: Limit"
+            end
         end
     end)
 end)
