@@ -652,7 +652,10 @@ local Config = {
     AttackPosition = "Above",
     SelectedEgg = "EasterEgg_HiddenEgg1",
     SelectedBoss = "None",
-    LastReportTime = 0
+    LastReportTime = 0,
+    AutoSummon = false,
+    SelectedSummonBoss = "SaberBoss",
+    SelectedDifficulty = "Normal"
 }
 
 -- Boss Data for Auto Farm
@@ -679,6 +682,7 @@ local DungeonTab = Window:CreateTab("Dungeon")
 local CommunityTab = Window:CreateTab("Community")
 local EventTab = Window:CreateTab("Event")
 local StatsTab = Window:CreateTab("Stats")
+local SummonTab = Window:CreateTab("Summon Boss")
 local ReportTab = Window:CreateTab("Bug Report")
 
 -- Quest Data Mapping
@@ -1007,6 +1011,27 @@ CommunityTab:CreateButton("Send to Discord", function()
     end)
 end)
 
+-- Summon Boss Tab
+SummonTab:CreateLabel("--- Auto Summon & Farm ---")
+SummonTab:CreateToggle("Enable Auto Summon", false, function(v)
+    Config.AutoSummon = v
+    SaveConfig()
+end)
+
+local summonBosses = {"SaberBoss", "QinShiBoss", "IchigoBoss", "GilgameshBoss", "BlessedMaidenBoss", "SaberAlterBoss", "MoonSlayerBoss", "IceQueenBoss"}
+SummonTab:CreateDropdown("Select Boss", summonBosses, "SaberBoss", false, function(v)
+    Config.SelectedSummonBoss = v
+    SaveConfig()
+end)
+
+local difficulties = {"Normal", "Medium", "Hard", "Extreme"}
+SummonTab:CreateDropdown("Select Difficulty", difficulties, "Normal", false, function(v)
+    Config.SelectedDifficulty = v
+    SaveConfig()
+end)
+
+SummonTab:CreateLabel("Note: All bosses spawn on Sailor Island.")
+
 -- Bug Report Tab
 ReportTab:CreateLabel("--- Support Center ---")
 ReportTab:CreateLabel("Please explain clearly: What happened? Where? How?")
@@ -1109,7 +1134,9 @@ local function GetTarget()
     end
 
     local mobsToSearch = nil
-    if Config.AutoKillDungeon then
+    if Config.AutoSummon then
+        mobsToSearch = {Config.SelectedSummonBoss, "SaberBoss", "QinShi", "Ichigo", "Gilgamesh", "Maiden", "Alter", "Moon", "Queen"}
+    elseif Config.AutoKillDungeon then
         mobsToSearch = nil
     elseif Config.AutoFarmQuest then
         local qd = QuestsData[Config.SelectedQuestNPC]
@@ -1123,7 +1150,7 @@ local function GetTarget()
         mobsToSearch = {Config.SelectedMob}
     end
 
-    if Config.AutoKillDungeon or Config.AutoFarmQuest or Config.AutoFarm or Config.AutoBossFarm or Config.SelectedBoss ~= "None" then
+    if Config.AutoKillDungeon or Config.AutoFarmQuest or Config.AutoFarm or Config.AutoBossFarm or Config.SelectedBoss ~= "None" or Config.AutoSummon then
         -- Search in NPCs folder if it exists
         if npcs then
             for _, v in ipairs(npcs:GetChildren()) do
@@ -1416,6 +1443,51 @@ task.spawn(function()
                         [2] = Config.StatAmount or 1
                     }
                     game:GetService("ReplicatedStorage"):WaitForChild("RemoteEvents"):WaitForChild("AllocateStat"):FireServer(unpack(args))
+                end)
+            end
+        end
+    end
+end)
+-- Auto Summon Loop
+task.spawn(function()
+    while task.wait(3) do
+        if getgenv().SailorHub_Cancel then break end
+        if Config.AutoSummon then
+            local bName = Config.SelectedSummonBoss
+            local diff = Config.SelectedDifficulty
+            
+            -- Verificar si el Boss ya está vivo
+            local alive = false
+            pcall(function()
+                local bossObj = workspace.NPCs:FindFirstChild(bName)
+                if bossObj and bossObj:FindFirstChild("Humanoid") and bossObj.Humanoid.Health > 0 then
+                    alive = true
+                end
+            end)
+            
+            if not alive then
+                -- Si no está vivo, ir a Sailor Island e invocar
+                if CurrentIsland ~= "Sailor" then
+                    TeleportToIsland("Sailor")
+                    task.wait(3)
+                end
+                
+                pcall(function()
+                    local remote = game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("RequestSummonBoss")
+                    if bName == "SaberBoss" or bName == "QinShiBoss" or bName == "IchigoBoss" then
+                        remote:FireServer(bName)
+                    else
+                        remote:FireServer(bName, diff)
+                    end
+                end)
+                task.wait(2) -- Esperar un poco
+            else
+                -- El Boss ya está vivo, forzamos el TP a él para asegurar el ataque
+                pcall(function()
+                    local bossObj = workspace.NPCs:FindFirstChild(bName)
+                    if bossObj and bossObj:FindFirstChild("HumanoidRootPart") then
+                        player.Character.HumanoidRootPart.CFrame = bossObj.HumanoidRootPart.CFrame * CFrame.new(0, Config.AttackDistance or 5, 0)
+                    end
                 end)
             end
         end
