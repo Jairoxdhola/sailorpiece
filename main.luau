@@ -629,6 +629,30 @@ MainTab:CreateToggle("Auto C (Skill 3)", false, function(v) Config.Skills[3] = v
 MainTab:CreateToggle("Auto V (Skill 4)", false, function(v) Config.Skills[4] = v end)
 MainTab:CreateToggle("Auto F (Skill 5)", false, function(v) Config.Skills[5] = v end)
 
+MainTab:CreateLabel("--- Codes ---")
+MainTab:CreateButton("Redeem All Codes", function()
+    local codes = {
+        "BIGGESTUPDATEYET", "SEA2FINALLY", "4SPECS", "SEABEASTS", "GOODFREECODE", 
+        "850MVISITSWOAHH", "MOREGOODFREECODE", "OVER800KFOLLOWINSANE", "SORRYFORBADSEA2QUEST", 
+        "500KFAVORITES", "900MVISITSTYSMM", "900KLIKESTYYY", "LASTRESTARTHOPEFULLY", 
+        "YETANOTHERFREECODE", "BUGFIXESCODES", "YETANOTHERFREECODE2", "THEOTHERFREECODEMB"
+    }
+    local remote = GetRemote("RemoteEvents", "CodeRedeem")
+    if remote then
+        for _, code in ipairs(codes) do
+            task.spawn(function()
+                pcall(function()
+                    remote:InvokeServer(code)
+                end)
+            end)
+            task.wait(0.1)
+        end
+        Window:Notify("Codes", "All codes have been attempted!")
+    else
+        Window:Notify("Error", "Redeem remote not found!")
+    end
+end)
+
 -- Farm Tab (Quests & Farming)
 local questNPCs = {}
 for i = 1, 19 do table.insert(questNPCs, "Quest NPC "..i) end
