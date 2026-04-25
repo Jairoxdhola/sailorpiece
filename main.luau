@@ -1104,6 +1104,8 @@ end)
 
 -- Changelog Tab
 ChangelogTab:CreateLabel("--- Latest Updates ---")
+ChangelogTab:CreateLabel("[v1.7.2] 12:32 PM - FIXED AutoSummon Island TP (Global Scope)")
+ChangelogTab:CreateLabel("[v1.7.1] 12:31 PM - FIXED Atomic Boss (Logic & Targeting)")
 ChangelogTab:CreateLabel("[v1.7.0] 12:30 PM - FIXED Atomic Boss Island (Lawless)")
 ChangelogTab:CreateLabel("[v1.6.9] 12:28 PM - FIXED StrongestBosses TP & Targeting")
 ChangelogTab:CreateLabel("[v1.6.8] 12:25 PM - FIXED Quest Logic Sequence (Accept then Attack)")
@@ -1237,7 +1239,7 @@ local function GetTarget()
 
     local mobsToSearch = nil
     if Config.AutoSummon then
-        mobsToSearch = {Config.SelectedSummonBoss, "Saber", "QinShi", "Ichigo", "Gilgamesh", "Maiden", "Alter", "Moon", "Queen", "Strongest", "Atomic", "GreatMage", "TrueAizen"}
+        mobsToSearch = {Config.SelectedSummonBoss, "Saber", "QinShi", "Ichigo", "Gilgamesh", "Maiden", "Alter", "Moon", "Queen", "Strongest", "Atomic", "AtomicBoss", "GreatMage", "TrueAizen"}
     elseif Config.AutoKillDungeon then
         mobsToSearch = nil
     elseif Config.AutoFarmQuest then
@@ -1444,9 +1446,9 @@ task.spawn(function()
     end
 end)
 
-local BuildDate = "April 25, 2026 - 12:30"
-print("Sailor Hub Loaded | Version: v1.7.0 | Build: " .. BuildDate)
-Window:Notify("Sailor Hub Loaded", "Version: v1.7.0\nBuild: " .. BuildDate)
+local BuildDate = "April 25, 2026 - 12:32"
+print("Sailor Hub Loaded | Version: v1.7.2 | Build: " .. BuildDate)
+Window:Notify("Sailor Hub Loaded", "Version: v1.7.2\nBuild: " .. BuildDate)
 
 -- Initial call (Optimized for Free Tier: Only 1 ping per session)
 task.spawn(function()
@@ -1603,7 +1605,7 @@ task.spawn(function()
                 elseif bName == "StrongestToday" or bName == "StrongestHistory" then targetIsland = "Shinjuku"
                 elseif bName == "Atomic" then targetIsland = "Lawless" end
                 
-                if CurrentIsland ~= targetIsland then
+                if getgenv().CurrentIsland ~= targetIsland then
                     TeleportToIsland(targetIsland)
                     task.wait(3)
                 end
