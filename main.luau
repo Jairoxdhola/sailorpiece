@@ -97,8 +97,8 @@ function Library:CreateWindow(title, toggleKey)
     task.spawn(function()
         local steps = {
             {txt = "Checking Server Connection...", val = 0.25, fn = function() end},
-            {txt = "Loading Configuration...", val = 0.5, fn = function() LoadConfig() end},
-            {txt = "Building Components...", val = 0.75, fn = function() end},
+            {txt = "Initializing Components...", val = 0.5, fn = function() end},
+            {txt = "Building UI...", val = 0.75, fn = function() end},
             {txt = "Ready to Farm!", val = 1.0, fn = function() end}
         }
 
@@ -627,8 +627,6 @@ function Library:CreateWindow(title, toggleKey)
 end
 
 
-local Window = Library:CreateWindow("Sailor Piece Hub", Enum.KeyCode.K)
-
 local player = game.Players.LocalPlayer
 local Config = {
     SelectedWeapon = "None",
@@ -639,8 +637,38 @@ local Config = {
     AutoVoteDifficulty = false,
     AutoReplayDungeon = false,
     AntiAFK = true,
-    Skills = {false, false, false, false, false}
+    Skills = {false, false, false, false, false},
+    AutoStats = {Melee = false, Defense = false, Sword = false, Power = false},
+    StatAmount = 1,
+    AutoCollectEggs = false,
+    AutoBossFarm = false,
+    LastSuggestionTime = 0,
+    SelectedQuestNPC = "QuestNPC1",
+    AutoAcceptQuest = false,
+    AutoFarm = false,
+    AutoFarmQuest = false,
+    SelectedMob = "None",
+    AttackDistance = 5,
+    AttackPosition = "Above",
+    SelectedEgg = "EasterEgg_HiddenEgg1",
+    SelectedBoss = "None"
 }
+
+-- Boss Data for Auto Farm
+local BossData = {
+    {Name = "JinwooBoss", Island = "Sailor"},
+    {Name = "YujiBoss", Island = "Shibuya"},
+    {Name = "GojoBoss", Island = "Shibuya"},
+    {Name = "SukunaBoss", Island = "Shibuya"},
+    {Name = "AizenBoss", Island = "HollowIsland"},
+    {Name = "YamatoBoss", Island = "Judgement"},
+    {Name = "StrongestShinobiBoss", Island = "Ninja"}
+}
+
+-- Load saved settings immediately
+LoadConfig()
+
+local Window = Library:CreateWindow("Sailor Piece Hub", Enum.KeyCode.K)
 
 -- UI Setup
 local MainTab = Window:CreateTab("Combat")
@@ -648,16 +676,8 @@ local FarmTab = Window:CreateTab("Farm")
 local TeleportTab = Window:CreateTab("Teleport")
 local DungeonTab = Window:CreateTab("Dungeon")
 local CommunityTab = Window:CreateTab("Community")
-
--- Config Update
-Config.LastSuggestionTime = 0
-Config.SelectedQuestNPC = "QuestNPC1"
-Config.AutoAcceptQuest = false
-Config.AutoFarm = false
-Config.AutoFarmQuest = false
-Config.SelectedMob = "None"
-Config.AttackDistance = 5
-Config.AttackPosition = "Above"
+local EventTab = Window:CreateTab("Event")
+local StatsTab = Window:CreateTab("Stats")
 
 -- Quest Data Mapping
 local QuestsData = {
@@ -843,7 +863,91 @@ DungeonTab:CreateToggle("Auto Replay Dungeon", false, function(v)
     SaveConfig()
 end)
 
--- Community Tab
+-- Stats Tab
+StatsTab:CreateLabel("--- Auto Stats ---")
+StatsTab:CreateTextBox("Points to add at once:", "1", function(v)
+    Config.StatAmount = tonumber(v) or 1
+    SaveConfig()
+end)
+
+for _, stat in ipairs({"Melee", "Defense", "Sword", "Power"}) do
+    StatsTab:CreateToggle("Auto "..stat, false, function(v)
+        Config.AutoStats[stat] = v
+        SaveConfig()
+    end)
+end
+
+-- Event Tab
+EventTab:CreateLabel("--- Easter Event ---")
+EventTab:CreateToggle("Auto Collect All Eggs", false, function(v)
+    Config.AutoCollectEggs = v
+    SaveConfig()
+end)
+
+local eggDropdown, eggDropObj = EventTab:CreateDropdown("Select Egg in Map", {"None"}, "None", false, function(v)
+    Config.SelectedEgg = v
+    SaveConfig()
+end)
+
+EventTab:CreateButton("Refresh Egg List", function()
+    local list = {"None"}
+    local folder = workspace:FindFirstChild("EasterEggs")
+    if folder then
+        for _, v in ipairs(folder:GetChildren()) do
+            local name = v.Name
+            if not name:find("SpawnPoints") and name ~= "HiddenEggs" and name ~= "TimedSpawnPoints" then
+                table.insert(list, name)
+            end
+        end
+    end
+    eggDropObj:refresh(list)
+    Window:Notify("Event", "Egg list updated!")
+end)
+
+EventTab:CreateButton("TP to Selected Egg", function()
+    local targetName = Config.SelectedEgg
+    if targetName == "None" then return end
+    
+    -- Temporarily stop farm to allow TP
+    currentTarget = nil
+    
+    local folder = workspace:FindFirstChild("EasterEggs")
+    local e = folder and folder:FindFirstChild(targetName)
+    
+    if e then
+        local p = e:FindFirstChild("ProximityPrompt", true)
+        if p then
+            player.Character.HumanoidRootPart.CFrame = p.Parent.CFrame * CFrame.new(0, 2, 0)
+            Window:Notify("Success", "Arrived at " .. targetName)
+        else
+            player.Character.HumanoidRootPart.CFrame = e:GetPivot()
+        end
+    else
+        Window:Notify("Error", "Egg not found! Try 'Refresh Egg List'")
+    end
+end)
+
+-- Boss Farm Logic
+FarmTab:CreateLabel("--- Bosses ---")
+FarmTab:CreateToggle("Auto Farm ALL Bosses", false, function(v)
+    Config.AutoBossFarm = v
+    SaveConfig()
+end)
+
+local bossNames = {"None"}
+for _, b in ipairs(BossData) do table.insert(bossNames, b.Name) end
+FarmTab:CreateDropdown("Farm Specific Boss", bossNames, "None", false, function(v)
+    Config.SelectedBoss = v
+    SaveConfig()
+    if v ~= "None" then
+        for _, b in ipairs(BossData) do
+            if b.Name == v then
+                TeleportToIsland(b.Island)
+                break
+            end
+        end
+    end
+end)
 CommunityTab:CreateLabel("--- Suggestions ---")
 local suggestionText = ""
 CommunityTab:CreateTextBox("Write your suggestion here...", "", function(v)
@@ -916,7 +1020,7 @@ end)
 
 local function GetTarget()
     local npcs = workspace:FindFirstChild("NPCs")
-    if not npcs then return nil end
+    -- We no longer return nil if npcs is missing, we proceed to fallback
     
     local target = nil
     local dist = math.huge
@@ -929,8 +1033,9 @@ local function GetTarget()
             return false
         end
         if not mobList then return true end
+        local name = v.Name:lower()
         for _, mobName in ipairs(mobList) do
-            if v.Name:find(mobName) then return true end
+            if name:find(mobName:lower(), 1, true) then return true end
         end
         return false
     end
@@ -941,17 +1046,38 @@ local function GetTarget()
     elseif Config.AutoFarmQuest then
         local qd = QuestsData[Config.SelectedQuestNPC]
         if qd then mobsToSearch = qd.Mobs end
+    elseif Config.AutoBossFarm or Config.SelectedBoss ~= "None" then
+        mobsToSearch = {"Boss", "MiniBoss", "Sukuna", "Gojo", "Aizen", "Law", "Katakuri", "Jinwoo", "Yuji", "Yamato", "Shinobi"}
+        if Config.SelectedBoss ~= "None" then
+            mobsToSearch = {Config.SelectedBoss}
+        end
     elseif Config.AutoFarm then
         mobsToSearch = {Config.SelectedMob}
     end
 
-    if Config.AutoKillDungeon or Config.AutoFarmQuest or Config.AutoFarm then
-        for _, v in ipairs(npcs:GetChildren()) do
-            if checkMob(v, mobsToSearch) then
-                local d = (v.HumanoidRootPart.Position - myPos).Magnitude
-                if d < dist then
-                    dist = d
-                    target = v
+    if Config.AutoKillDungeon or Config.AutoFarmQuest or Config.AutoFarm or Config.AutoBossFarm or Config.SelectedBoss ~= "None" then
+        -- Search in NPCs folder if it exists
+        if npcs then
+            for _, v in ipairs(npcs:GetChildren()) do
+                if checkMob(v, mobsToSearch) then
+                    local d = (v.HumanoidRootPart.Position - myPos).Magnitude
+                    if d < dist then
+                        dist = d
+                        target = v
+                    end
+                end
+            end
+        end
+        
+        -- Fallback: Search direct in workspace if not found in folder
+        if not target then
+            for _, v in ipairs(workspace:GetChildren()) do
+                if checkMob(v, mobsToSearch) then
+                    local d = (v.HumanoidRootPart.Position - myPos).Magnitude
+                    if d < dist then
+                        dist = d
+                        target = v
+                    end
                 end
             end
         end
@@ -1099,18 +1225,19 @@ end)
 
 Window:Notify("Script Started", "Version: " .. (Library.Version or "Unknown"))
 
--- High Potency Anti-AFK (Always On)
+-- High Potency Anti-AFK (Safe Version - No Clicks)
 task.spawn(function()
-    local vu = game:GetService("VirtualUser")
-    player.Idled:Connect(function()
-        vu:CaptureController()
-        vu:ClickButton2(Vector2.new())
-    end)
     while task.wait(60) do
         if getgenv().SailorHub_Cancel then break end
-        -- Periodic movement to ensure anti-idle
-        vu:CaptureController()
-        vu:ClickButton1(Vector2.new())
+        pcall(function()
+            local char = player.Character
+            if char and char:FindFirstChild("Humanoid") then
+                -- Pequeño salto para resetear el timer de AFK sin interferir con el menú
+                char.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+                task.wait(0.2)
+                char.Humanoid:ChangeState(Enum.HumanoidStateType.FallingDown)
+            end
+        end)
     end
 end)
 
@@ -1130,4 +1257,99 @@ task.spawn(function()
             end
         end
     end)
+end)
+
+-- Easter Egg Collector Loop
+task.spawn(function()
+    while task.wait(0.3) do
+        if getgenv().SailorHub_Cancel then break end
+        if Config.AutoCollectEggs then
+            pcall(function()
+                local eggsFolder = workspace:FindFirstChild("EasterEggs")
+                if eggsFolder then
+                    for _, egg in ipairs(eggsFolder:GetChildren()) do
+                        -- Ignorar carpetas internas de spawn
+                        if not egg.Name:find("SpawnPoints") and egg.Name ~= "HiddenEggs" and egg.Name ~= "TimedSpawnPoints" then
+                            local prompt = egg:FindFirstChild("ProximityPrompt", true)
+                            if prompt then
+                                local char = player.Character
+                                if char and char:FindFirstChild("HumanoidRootPart") then
+                                    char.HumanoidRootPart.CFrame = prompt.Parent.CFrame * CFrame.new(0, 2, 0)
+                                    task.wait(0.1)
+                                    fireproximityprompt(prompt)
+                                    -- No esperamos tanto para poder ir al siguiente rápido
+                                end
+                            end
+                        end
+                    end
+                end
+            end)
+        end
+    end
+end)
+
+-- Auto Boss Farm Loop (ALL or Specific)
+task.spawn(function()
+    while task.wait(5) do
+        if getgenv().SailorHub_Cancel then break end
+        
+        local targetBossInfo = nil
+        if Config.SelectedBoss ~= "None" then
+            for _, b in ipairs(BossData) do if b.Name == Config.SelectedBoss then targetBossInfo = b break end end
+        elseif Config.AutoBossFarm then
+            -- Encontrar el primer Boss vivo en la lista
+            for _, b in ipairs(BossData) do
+                local alive = false
+                pcall(function()
+                    local bossObj = workspace.NPCs:FindFirstChild(b.Name)
+                    if bossObj and bossObj:FindFirstChild("Humanoid") and bossObj.Humanoid.Health > 0 then
+                        alive = true
+                    end
+                end)
+                if alive then
+                    targetBossInfo = b
+                    break
+                end
+            end
+        end
+
+        if targetBossInfo then
+            local bName = targetBossInfo.Name
+            local bIsland = targetBossInfo.Island
+            
+            local bossObj = workspace.NPCs:FindFirstChild(bName)
+            if not bossObj or (bossObj:FindFirstChild("Humanoid") and bossObj.Humanoid.Health <= 0) then
+                -- Si no existe en el workspace actual, tal vez estamos en la isla equivocada
+                if CurrentIsland ~= bIsland then
+                    TeleportToIsland(bIsland)
+                    task.wait(3)
+                end
+            else
+                -- El Boss existe y está vivo, nos teletransportamos DIRECTO a él para activar el farm
+                pcall(function()
+                    if bossObj:FindFirstChild("HumanoidRootPart") then
+                        player.Character.HumanoidRootPart.CFrame = bossObj.HumanoidRootPart.CFrame * CFrame.new(0, Config.AttackDistance or 5, 0)
+                    end
+                end)
+            end
+        end
+    end
+end)
+
+-- Auto Stats Loop
+task.spawn(function()
+    while task.wait(0.5) do -- Más rápido como pediste
+        if getgenv().SailorHub_Cancel then break end
+        for stat, enabled in pairs(Config.AutoStats or {}) do
+            if enabled then
+                pcall(function()
+                    local args = {
+                        [1] = stat,
+                        [2] = Config.StatAmount or 1
+                    }
+                    game:GetService("ReplicatedStorage"):WaitForChild("RemoteEvents"):WaitForChild("AllocateStat"):FireServer(unpack(args))
+                end)
+            end
+        end
+    end
 end)
