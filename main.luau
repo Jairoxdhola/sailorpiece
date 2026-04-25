@@ -65,6 +65,8 @@ local Config = {
     StatAmount = 1,
     AutoCollectEggs = false,
     AutoBossFarm = false,
+    AutoInfiniteTower = false,
+    AutoStartWave = false,
     LastSuggestionTime = 0,
     SelectedQuestNPC = "QuestNPC1",
     AutoAcceptQuest = false,
@@ -745,22 +747,22 @@ local function AcceptQuest(npc)
 end
 
 -- Combat Tab (Weapons & Attack)
-local _, weaponDropdownObj = MainTab:CreateDropdown("Select Weapon", {"None"}, "None", false, function(v)
+local _, weaponDropdownObj = MainTab:CreateDropdown("Select Weapon", {"None"}, Config.SelectedWeapon or "None", false, function(v)
     Config.SelectedWeapon = v
     SaveConfig()
 end)
 
-MainTab:CreateToggle("Auto Equip", false, function(v)
+MainTab:CreateToggle("Auto Equip", Config.AutoEquip, function(v)
     Config.AutoEquip = v
     SaveConfig()
 end)
 
-MainTab:CreateDropdown("Attack Position", {"Above", "Below", "Behind"}, "Above", false, function(v)
+MainTab:CreateDropdown("Attack Position", {"Above", "Below", "Behind"}, Config.AttackPosition or "Above", false, function(v)
     Config.AttackPosition = v
     SaveConfig()
 end)
 
-MainTab:CreateSlider("Attack Distance", 1, 15, 5, " m", function(v)
+MainTab:CreateSlider("Attack Distance", 1, 15, Config.AttackDistance or 5, " m", function(v)
     Config.AttackDistance = v
     SaveConfig()
 end)
@@ -801,7 +803,7 @@ local questNPCs = {}
 for i = 1, 19 do table.insert(questNPCs, "Quest NPC "..i) end
 table.insert(questNPCs, "Auto Farm Bunny")
 
-FarmTab:CreateDropdown("Select Quest NPC", questNPCs, "Quest NPC 1", false, function(v)
+FarmTab:CreateDropdown("Select Quest NPC", questNPCs, Config.SelectedQuestNPC or "Quest NPC 1", false, function(v)
     local npcName = v
     if v:find("Quest NPC ") then
         npcName = v:gsub("Quest NPC ", "QuestNPC")
@@ -823,7 +825,7 @@ FarmTab:CreateDropdown("Select Quest NPC", questNPCs, "Quest NPC 1", false, func
     end)
 end)
 
-FarmTab:CreateToggle("Auto Farm Selected Quest", false, function(v)
+FarmTab:CreateToggle("Auto Farm Selected Quest", Config.AutoFarmQuest, function(v)
     Config.AutoFarmQuest = v
     SaveConfig()
 end)
@@ -848,6 +850,16 @@ TeleportTab:CreateDropdown("Select Island", islands, "Starter", false, function(
 end)
 
 -- Dungeon Tab
+DungeonTab:CreateToggle("Auto Infinite Tower", false, function(v)
+    Config.AutoInfiniteTower = v
+    SaveConfig()
+end)
+
+DungeonTab:CreateToggle("Auto Start Wave (Vote)", false, function(v)
+    Config.AutoStartWave = v
+    SaveConfig()
+end)
+
 DungeonTab:CreateDropdown("Select Dungeon", {"CidDungeon", "RuneDungeon", "DoubleDungeon"}, "CidDungeon", false, function(v)
     Config.SelectedDungeon = v
 end)
@@ -872,30 +884,30 @@ DungeonTab:CreateButton("Vote Difficulty", function()
     Window:Notify("Dungeon", "Voted for: " .. Config.SelectedDifficulty)
 end)
 
-DungeonTab:CreateToggle("Auto Kill Dungeon", false, function(v)
+DungeonTab:CreateToggle("Auto Kill Dungeon", Config.AutoKillDungeon, function(v)
     Config.AutoKillDungeon = v
     SaveConfig()
 end)
 
-DungeonTab:CreateToggle("Auto Vote Difficulty", false, function(v)
+DungeonTab:CreateToggle("Auto Vote Difficulty", Config.AutoVoteDifficulty, function(v)
     Config.AutoVoteDifficulty = v
     SaveConfig()
 end)
 
-DungeonTab:CreateToggle("Auto Replay Dungeon", false, function(v)
+DungeonTab:CreateToggle("Auto Replay Dungeon", Config.AutoReplayDungeon, function(v)
     Config.AutoReplayDungeon = v
     SaveConfig()
 end)
 
 -- Stats Tab
 StatsTab:CreateLabel("--- Auto Stats ---")
-StatsTab:CreateTextBox("Points to add at once:", "1", function(v)
+StatsTab:CreateTextBox("Points to add at once:", tostring(Config.StatAmount or 1), function(v)
     Config.StatAmount = tonumber(v) or 1
     SaveConfig()
 end)
 
 for _, stat in ipairs({"Melee", "Defense", "Sword", "Power"}) do
-    StatsTab:CreateToggle("Auto "..stat, false, function(v)
+    StatsTab:CreateToggle("Auto "..stat, Config.AutoStats[stat] or false, function(v)
         Config.AutoStats[stat] = v
         SaveConfig()
     end)
@@ -903,7 +915,7 @@ end
 
 -- Event Tab
 EventTab:CreateLabel("--- Easter Event ---")
-EventTab:CreateToggle("Auto Collect All Eggs", false, function(v)
+EventTab:CreateToggle("Auto Collect All Eggs", Config.AutoCollectEggs, function(v)
     Config.AutoCollectEggs = v
     SaveConfig()
 end)
@@ -953,7 +965,7 @@ end)
 
 -- Boss Farm Logic
 FarmTab:CreateLabel("--- Bosses ---")
-FarmTab:CreateToggle("Auto Farm ALL Bosses", false, function(v)
+FarmTab:CreateToggle("Auto Farm ALL Bosses", Config.AutoBossFarm, function(v)
     Config.AutoBossFarm = v
     SaveConfig()
 end)
@@ -1024,19 +1036,19 @@ end)
 
 -- Summon Boss Tab
 SummonTab:CreateLabel("--- Auto Summon & Farm ---")
-SummonTab:CreateToggle("Enable Auto Summon", false, function(v)
+SummonTab:CreateToggle("Enable Auto Summon", Config.AutoSummon, function(v)
     Config.AutoSummon = v
     SaveConfig()
 end)
 
-local summonBosses = {"SaberBoss", "QinShiBoss", "IchigoBoss", "GilgameshBoss", "BlessedMaidenBoss", "SaberAlterBoss", "MoonSlayerBoss", "IceQueenBoss", "GreatMage", "TrueAizen", "StrongestToday", "StrongestHistory"}
-SummonTab:CreateDropdown("Select Boss", summonBosses, "SaberBoss", false, function(v)
+local summonBosses = {"SaberBoss", "QinShiBoss", "IchigoBoss", "GilgameshBoss", "BlessedMaidenBoss", "SaberAlterBoss", "MoonSlayerBoss", "IceQueenBoss", "GreatMage", "TrueAizen", "StrongestToday", "StrongestHistory", "Atomic"}
+SummonTab:CreateDropdown("Select Boss", summonBosses, Config.SelectedSummonBoss or "SaberBoss", false, function(v)
     Config.SelectedSummonBoss = v
     SaveConfig()
 end)
 
 local difficulties = {"Normal", "Medium", "Hard", "Extreme"}
-SummonTab:CreateDropdown("Select Difficulty", difficulties, "Normal", false, function(v)
+SummonTab:CreateDropdown("Select Difficulty", difficulties, Config.SelectedDifficulty or "Normal", false, function(v)
     Config.SelectedDifficulty = v
     SaveConfig()
 end)
@@ -1049,18 +1061,18 @@ SummonTab:CreateLabel("🏝️ Sailor Island: All Others")
 
 -- Chest Opener Tab
 ChestTab:CreateLabel("--- Inventory Chest Opener ---")
-ChestTab:CreateToggle("Auto Open Chests", false, function(v)
+ChestTab:CreateToggle("Auto Open Chests", Config.AutoOpenChests, function(v)
     Config.AutoOpenChests = v
     SaveConfig()
 end)
 
 local chestList = {"Common Chest", "Rare Chest", "Epic Chest", "Legendary Chest", "Mythical Chest"}
-ChestTab:CreateDropdown("Select Chest", chestList, "Common Chest", false, function(v)
+ChestTab:CreateDropdown("Select Chest", chestList, Config.SelectedChest or "Common Chest", false, function(v)
     Config.SelectedChest = v
     SaveConfig()
 end)
 
-ChestTab:CreateTextBox("Amount to Open", "1", function(v)
+ChestTab:CreateTextBox("Amount to Open", tostring(Config.ChestAmount or 1), function(v)
     Config.ChestAmount = tonumber(v) or 1
     SaveConfig()
 end)
@@ -1074,6 +1086,9 @@ end)
 
 -- Changelog Tab
 ChangelogTab:CreateLabel("--- Latest Updates ---")
+ChangelogTab:CreateLabel("[v1.6.2] 12:05 PM - FIXED Auto-Save (UI Visuals) & Shaking bug")
+ChangelogTab:CreateLabel("[v1.6.1] 12:02 PM - Added Auto Kill for Infinite Tower")
+ChangelogTab:CreateLabel("[v1.6.0] 12:00 PM - Added Auto Infinite Tower & Atomic Boss")
 ChangelogTab:CreateLabel("[v1.5.4] 11:51 AM - FIXED Cooldown Reset & Webhook Version")
 ChangelogTab:CreateLabel("[v1.5.3] 11:38 AM - FIXED UI Overlap (Moved User Count)")
 ChangelogTab:CreateLabel("[v1.5.2] 11:36 AM - Added Inventory Chest Opener")
@@ -1207,7 +1222,7 @@ local function GetTarget()
         mobsToSearch = {Config.SelectedMob}
     end
 
-    if Config.AutoKillDungeon or Config.AutoFarmQuest or Config.AutoFarm or Config.AutoBossFarm or Config.SelectedBoss ~= "None" or Config.AutoSummon then
+    if Config.AutoKillDungeon or Config.AutoFarmQuest or Config.AutoFarm or Config.AutoBossFarm or Config.SelectedBoss ~= "None" or Config.AutoSummon or Config.AutoInfiniteTower then
         -- Search in NPCs folder if it exists
         if npcs then
             for _, v in ipairs(npcs:GetChildren()) do
@@ -1262,14 +1277,17 @@ end)
 
 -- Auto Farm & Movement Loop
 getgenv().SailorHub_Connection = game:GetService("RunService").Heartbeat:Connect(function()
-    if currentTarget then
-        pcall(function()
-            local char = player.Character
-            if char and char:FindFirstChild("HumanoidRootPart") then
+    local char = player.Character
+    if char and char:FindFirstChild("HumanoidRootPart") then
+        if currentTarget then
+            pcall(function()
                 char.HumanoidRootPart.Velocity = Vector3.new(0,0,0)
                 char.HumanoidRootPart.CFrame = GetAttackCFrame(currentTarget)
-            end
-        end)
+            end)
+        else
+            -- Stabilizer: Stop shaking when no target
+            char.HumanoidRootPart.Velocity = Vector3.new(0,0,0)
+        end
     end
 end)
 
@@ -1393,9 +1411,9 @@ task.spawn(function()
     end
 end)
 
-local BuildDate = "April 25, 2026 - 11:51"
-print("Sailor Hub Loaded | Version: v1.5.4 | Build: " .. BuildDate)
-Window:Notify("Sailor Hub Loaded", "Version: v1.5.4\nBuild: " .. BuildDate)
+local BuildDate = "April 25, 2026 - 12:05"
+print("Sailor Hub Loaded | Version: v1.6.2 | Build: " .. BuildDate)
+Window:Notify("Sailor Hub Loaded", "Version: v1.6.2\nBuild: " .. BuildDate)
 
 -- Initial call (Optimized for Free Tier: Only 1 ping per session)
 task.spawn(function()
@@ -1523,6 +1541,8 @@ task.spawn(function()
                 checkName = "StrongestofTodayBoss_" .. diff
             elseif bName == "StrongestHistory" then
                 checkName = "StrongestinHistoryBoss_" .. diff
+            elseif bName == "Atomic" then
+                checkName = "AtomicBoss_" .. diff
             end
 
             -- Verificar si el Boss ya está vivo
@@ -1559,6 +1579,8 @@ task.spawn(function()
                         game:GetService("ReplicatedStorage"):WaitForChild("RemoteEvents"):WaitForChild("RequestSpawnGreatMage"):FireServer(diff)
                     elseif bName == "TrueAizen" then
                         game:GetService("ReplicatedStorage"):WaitForChild("RemoteEvents"):WaitForChild("RequestSpawnTrueAizen"):FireServer(diff)
+                    elseif bName == "Atomic" then
+                        game:GetService("ReplicatedStorage"):WaitForChild("RemoteEvents"):WaitForChild("RequestSpawnAtomic"):FireServer(diff)
                     elseif bName == "StrongestToday" or bName == "StrongestHistory" then
                         game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("RequestSpawnStrongestBoss"):FireServer(bName, diff)
                     else
@@ -1599,6 +1621,23 @@ task.spawn(function()
         if Config.AutoOpenChests then
             pcall(function()
                 game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("UseItem"):FireServer("Use", Config.SelectedChest, Config.ChestAmount, false, false)
+            end)
+        end
+    end
+end)
+
+-- Auto Infinite Tower Loop
+task.spawn(function()
+    while task.wait(5) do
+        if getgenv().SailorHub_Cancel then break end
+        if Config.AutoInfiniteTower then
+            pcall(function()
+                game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("RequestDungeonPortal"):FireServer("InfiniteTower")
+            end)
+        end
+        if Config.AutoStartWave then
+            pcall(function()
+                game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("DungeonWaveVote"):FireServer("start")
             end)
         end
     end
