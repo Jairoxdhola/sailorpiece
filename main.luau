@@ -132,6 +132,42 @@ function Library:CreateWindow(title, toggleKey)
             main.Visible = not main.Visible
         end
     end)
+    -- Floating Toggle Button (Mobile/PC Friendly)
+    local toggleBtn = Instance.new("ImageButton", gui)
+    toggleBtn.Name = "SailorToggle"
+    toggleBtn.Size = UDim2.new(0, 45, 0, 45)
+    toggleBtn.Position = UDim2.new(0, 10, 0.5, -22)
+    toggleBtn.BackgroundColor3 = C.Accent
+    toggleBtn.Image = "rbxassetid://6031070940" -- Compass/Global icon
+    toggleBtn.ImageColor3 = C.Text
+    toggleBtn.BorderSizePixel = 0
+    toggleBtn.ZIndex = 1001
+    Instance.new("UICorner", toggleBtn).CornerRadius = UDim.new(0, 10)
+    local btnStroke = Instance.new("UIStroke", toggleBtn)
+    btnStroke.Color = Color3.new(1,1,1)
+    btnStroke.Thickness = 1.5
+    btnStroke.Transparency = 0.7
+
+    -- Draggable Logic for Toggle Button
+    local bDrag, bDS, bSP
+    toggleBtn.InputBegan:Connect(function(i)
+        if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then
+            bDrag = true
+            bDS = i.Position
+            bSP = toggleBtn.Position
+            i.Changed:Connect(function() if i.UserInputState == Enum.UserInputState.End then bDrag = false end end)
+        end
+    end)
+    UIS.InputChanged:Connect(function(i)
+        if bDrag and (i.UserInputType == Enum.UserInputType.MouseMovement or i.UserInputType == Enum.UserInputType.Touch) then
+            local d = i.Position - bDS
+            toggleBtn.Position = UDim2.new(bSP.X.Scale, bSP.X.Offset+d.X, bSP.Y.Scale, bSP.Y.Offset+d.Y)
+        end
+    end)
+
+    toggleBtn.MouseButton1Click:Connect(function()
+        main.Visible = not main.Visible
+    end)
 
     -- Sidebar
     local side = Instance.new("Frame", main)
@@ -489,7 +525,8 @@ local Config = {
     AutoKillDungeon = false,
     AutoVoteDifficulty = false,
     AutoReplayDungeon = false,
-    AntiAFK = true
+    AntiAFK = true,
+    Skills = {false, false, false, false, false}
 }
 
 -- UI Setup
@@ -528,7 +565,7 @@ local QuestsData = {
     ["QuestNPC17"] = {Island="Judgement", Mobs={"Quincy1"}},
     ["QuestNPC18"] = {Island="Judgement", Mobs={"Ninja1"}},
     ["QuestNPC19"] = {Island="Lawless", Mobs={"ArenaFighter1"}},
-    ["Auto Farm Bunny"] = {Island="EasterIsland", Mobs={"Bunny1","Bunny2","Bunny3","Bunny4","Bunny5"}}
+    ["Auto Farm Bunny"] = {Island="Easter", Mobs={"Bunny1","Bunny2","Bunny3","Bunny4","Bunny5"}}
 }
 
 -- Remote Helper
@@ -572,6 +609,13 @@ end)
 MainTab:CreateSlider("Attack Distance", 1, 15, 5, " m", function(v)
     Config.AttackDistance = v
 end)
+
+MainTab:CreateLabel("--- Auto Skills ---")
+MainTab:CreateToggle("Auto Z (Skill 1)", false, function(v) Config.Skills[1] = v end)
+MainTab:CreateToggle("Auto X (Skill 2)", false, function(v) Config.Skills[2] = v end)
+MainTab:CreateToggle("Auto C (Skill 3)", false, function(v) Config.Skills[3] = v end)
+MainTab:CreateToggle("Auto V (Skill 4)", false, function(v) Config.Skills[4] = v end)
+MainTab:CreateToggle("Auto F (Skill 5)", false, function(v) Config.Skills[5] = v end)
 
 -- Farm Tab (Quests & Farming)
 local questNPCs = {}
@@ -750,16 +794,30 @@ getgenv().SailorHub_Connection = game:GetService("RunService").Heartbeat:Connect
     end
 end)
 
--- Fast Attack Loop
+-- Fast Attack & Skills Loop
 task.spawn(function()
     while task.wait(0.1) do
         if getgenv().SailorHub_Cancel then break end
         if currentTarget then
             pcall(function()
+                -- Fast Attack
                 local r = game:GetService("ReplicatedStorage"):FindFirstChild("CombatSystem") and game:GetService("ReplicatedStorage").CombatSystem:FindFirstChild("Remotes")
                 if r then
                     local hit = r:FindFirstChild("RequestHit")
                     if hit then hit:FireServer() end
+                end
+                
+                -- Auto Skills
+                local skillRemote = game:GetService("ReplicatedStorage"):FindFirstChild("AbilitySystem") 
+                    and game:GetService("ReplicatedStorage").AbilitySystem:FindFirstChild("Remotes")
+                    and game:GetService("ReplicatedStorage").AbilitySystem.Remotes:FindFirstChild("RequestAbility")
+                
+                if skillRemote then
+                    for i, enabled in ipairs(Config.Skills) do
+                        if enabled then
+                            skillRemote:FireServer(i)
+                        end
+                    end
                 end
             end)
         end
@@ -855,6 +913,6 @@ task.spawn(function()
     end
 end)
 
-local BuildDate = "April 25, 2026 - 00:33"
+local BuildDate = "April 25, 2026 - 00:46"
 print("Sailor Hub Loaded | Version: " .. Library.Version .. " | Build: " .. BuildDate)
 Window:Notify("Sailor Hub Loaded", "Version: " .. Library.Version .. "\nBuild: " .. BuildDate)
