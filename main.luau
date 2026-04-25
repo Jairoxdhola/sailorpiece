@@ -684,6 +684,7 @@ local EventTab = Window:CreateTab("Event")
 local StatsTab = Window:CreateTab("Stats")
 local SummonTab = Window:CreateTab("Summon Boss")
 local ReportTab = Window:CreateTab("Bug Report")
+local ChangelogTab = Window:CreateTab("Changelog")
 
 -- Quest Data Mapping
 local QuestsData = {
@@ -1041,6 +1042,19 @@ SummonTab:CreateLabel("🏝️ Soul Dominion: TrueAizen")
 SummonTab:CreateLabel("🏝️ Easter Island: GreatMage")
 SummonTab:CreateLabel("🏝️ Sailor Island: All Others")
 
+-- Changelog Tab
+ChangelogTab:CreateLabel("--- Latest Updates ---")
+ChangelogTab:CreateLabel("[v1.5.0] 11:26 AM - Added Changelog system")
+ChangelogTab:CreateLabel("[v1.4.9] 11:24 AM - FIXED Fling bug (Physics Stabilizer)")
+ChangelogTab:CreateLabel("[v1.4.8] 11:10 AM - Added Soul Dominion Portal Support")
+ChangelogTab:CreateLabel("[v1.4.7] 11:08 AM - Added TrueAizen Boss & Island")
+ChangelogTab:CreateLabel("[v1.4.6] 11:06 AM - Updated Boss Info & Notes")
+ChangelogTab:CreateLabel("[v1.4.5] 11:05 AM - Fixed GreatMage Island Destination")
+ChangelogTab:CreateLabel("[v1.4.4] 11:04 AM - Added GreatMage Boss Summoning")
+ChangelogTab:CreateLabel("[v1.4.3] 10:57 AM - Added Bug Report & Summon Tab")
+ChangelogTab:CreateLabel("[v1.4.2] 10:28 AM - Added Fast Stats & Global Eggs")
+ChangelogTab:CreateLabel("[v1.4.1] Earlier - Initial Hub Release (Auto Save)")
+
 -- Bug Report Tab
 ReportTab:CreateLabel("--- Support Center ---")
 ReportTab:CreateLabel("Please explain clearly: What happened? Where? How?")
@@ -1345,9 +1359,9 @@ task.spawn(function()
     end
 end)
 
-local BuildDate = "April 25, 2026 - 11:24"
-print("Sailor Hub Loaded | Version: v1.4.9 | Build: " .. BuildDate)
-Window:Notify("Sailor Hub Loaded", "Version: v1.4.9\nBuild: " .. BuildDate)
+local BuildDate = "April 25, 2026 - 11:26"
+print("Sailor Hub Loaded | Version: v1.5.0 | Build: " .. BuildDate)
+Window:Notify("Sailor Hub Loaded", "Version: v1.5.0\nBuild: " .. BuildDate)
 
 -- Initial call (Optimized for Free Tier: Only 1 ping per session)
 task.spawn(function()
