@@ -28,7 +28,7 @@ Library.Colors = {
     TogOff = Color3.fromRGB(45,45,65), TogOn = Color3.fromRGB(100,80,255),
 }
 local C = Library.Colors
-Library.Version = "v1.2.6 (FPS Fix)"
+Library.Version = "v1.3.0 (Anti-AFK Pro)"
 
 function Library:CreateWindow(title, toggleKey)
     -- Loading Screen
@@ -840,4 +840,21 @@ end)
 
 Window:Notify("Script Started", "Version: " .. (Library.Version or "Unknown"))
 
-Window:Notify("Script Started", "Weapon system ready. Version: " .. (Library.Version or "Unknown"))
+-- High Potency Anti-AFK (Always On)
+task.spawn(function()
+    local vu = game:GetService("VirtualUser")
+    player.Idled:Connect(function()
+        vu:CaptureController()
+        vu:ClickButton2(Vector2.new())
+    end)
+    while task.wait(60) do
+        if getgenv().SailorHub_Cancel then break end
+        -- Periodic movement to ensure anti-idle
+        vu:CaptureController()
+        vu:ClickButton1(Vector2.new())
+    end
+end)
+
+local BuildDate = "April 25, 2026 - 00:33"
+print("Sailor Hub Loaded | Version: " .. Library.Version .. " | Build: " .. BuildDate)
+Window:Notify("Sailor Hub Loaded", "Version: " .. Library.Version .. "\nBuild: " .. BuildDate)
