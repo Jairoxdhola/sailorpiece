@@ -548,6 +548,45 @@ function Library:CreateWindow(title, toggleKey)
             return l
         end
 
+        function tabObj:CreateTextBox(text, placeholder, callback)
+            local tb_bg = Instance.new("Frame", page)
+            tb_bg.Size = UDim2.new(1,0,0,60)
+            tb_bg.BackgroundColor3 = C.Elem
+            tb_bg.BorderSizePixel = 0
+            Instance.new("UICorner", tb_bg)
+            
+            local t = Instance.new("TextLabel", tb_bg)
+            t.Size = UDim2.new(1,-20,0,25)
+            t.Position = UDim2.new(0,10,0,5)
+            t.BackgroundTransparency = 1
+            t.Text = text
+            t.TextColor3 = C.Sub
+            t.TextSize = 12
+            t.Font = Enum.Font.GothamMedium
+            t.TextXAlignment = Enum.TextXAlignment.Left
+
+            local box = Instance.new("TextBox", tb_bg)
+            box.Size = UDim2.new(1,-20,0,20)
+            box.Position = UDim2.new(0,10,0,30)
+            box.BackgroundColor3 = Color3.fromRGB(25,25,35)
+            box.PlaceholderText = placeholder or "Enter text..."
+            box.Text = ""
+            box.TextColor3 = C.Text
+            box.TextSize = 13
+            box.Font = Enum.Font.Gotham
+            box.BorderSizePixel = 0
+            Instance.new("UICorner", box)
+            
+            box.FocusLost:Connect(function()
+                callback(box.Text)
+            end)
+            box:GetPropertyChangedSignal("Text"):Connect(function()
+                callback(box.Text)
+            end)
+            
+            return tb_bg
+        end
+
         return tabObj
     end
 
@@ -608,8 +647,10 @@ local MainTab = Window:CreateTab("Combat")
 local FarmTab = Window:CreateTab("Farm")
 local TeleportTab = Window:CreateTab("Teleport")
 local DungeonTab = Window:CreateTab("Dungeon")
+local CommunityTab = Window:CreateTab("Community")
 
 -- Config Update
+Config.LastSuggestionTime = 0
 Config.SelectedQuestNPC = "QuestNPC1"
 Config.AutoAcceptQuest = false
 Config.AutoFarm = false
@@ -800,6 +841,56 @@ end)
 DungeonTab:CreateToggle("Auto Replay Dungeon", false, function(v)
     Config.AutoReplayDungeon = v
     SaveConfig()
+end)
+
+-- Community Tab
+CommunityTab:CreateLabel("--- Suggestions ---")
+local suggestionText = ""
+CommunityTab:CreateTextBox("Write your suggestion here...", "", function(v)
+    suggestionText = v
+end)
+
+CommunityTab:CreateButton("Send to Discord", function()
+    local now = os.time()
+    if now - (Config.LastSuggestionTime or 0) < 300 then
+        local waitTime = math.ceil(300 - (now - Config.LastSuggestionTime))
+        Window:Notify("Cooldown Active", "You must wait " .. waitTime .. " seconds to send another suggestion.")
+        return
+    end
+
+    if #suggestionText < 10 then
+        Window:Notify("Error", "Suggestion is too short! Please explain more.")
+        return
+    end
+
+    local webhookUrl = "https://discordapp.com/api/webhooks/1497486126800441476/EXiORFVJmJ8d0djqURc0uBLVhFdRz_ejgfdZn0a4nfDC1N3KDywRu1FJbtwYkAiEohGU"
+
+    task.spawn(function()
+        pcall(function()
+            local data = {
+                ["embeds"] = {{
+                    ["title"] = "📩 New Community Suggestion",
+                    ["description"] = "**Message:**\n" .. suggestionText,
+                    ["color"] = 0x6e5aff, -- Color morado premium
+                    ["fields"] = {
+                        {["name"] = "Player Info", ["value"] = "👤 Name: " .. player.Name .. "\n🏷️ Display: " .. player.DisplayName .. "\n🆔 ID: " .. player.UserId, ["inline"] = true},
+                        {["name"] = "Account Age", ["value"] = "📅 " .. player.AccountAge .. " days", ["inline"] = true}
+                    },
+                    ["footer"] = {["text"] = "Sailor Hub v1.4.1 | " .. os.date("%X")}
+                }}
+            }
+            local json = HttpService:JSONEncode(data)
+            request({
+                Url = webhookUrl,
+                Method = "POST",
+                Headers = {["Content-Type"] = "application/json"},
+                Body = json
+            })
+            Config.LastSuggestionTime = now
+            SaveConfig()
+            Window:Notify("Success", "Your suggestion has been delivered to the owner!")
+        end)
+    end)
 end)
 
 local LastBossTeleport = 0
