@@ -558,25 +558,25 @@ Config.AttackPosition = "Above"
 
 -- Quest Data Mapping
 local QuestsData = {
-    ["QuestNPC1"] = {Island="Starter", Mobs={"Thief1","Thief2","Thief3","Thief5"}},
+    ["QuestNPC1"] = {Island="Starter", Mobs={"Thief1","Thief2","Thief3","Thief4","Thief5"}},
     ["QuestNPC2"] = {Island="Starter", Mobs={"ThiefBoss"}},
     ["QuestNPC3"] = {Island="Jungle", Mobs={"Monkey1","Monkey2","Monkey3","Monkey4","Monkey5"}},
     ["QuestNPC4"] = {Island="Jungle", Mobs={"MonkeyBoss"}},
     ["QuestNPC5"] = {Island="Desert", Mobs={"DesertBandit1","DesertBandit2","DesertBandit3","DesertBandit4","DesertBandit5"}},
     ["QuestNPC6"] = {Island="Desert", Mobs={"DesertBoss"}},
-    ["QuestNPC7"] = {Island="Snow", Mobs={"FrostRogue1"}},
+    ["QuestNPC7"] = {Island="Snow", Mobs={"FrostRogue1","FrostRogue2","FrostRogue3","FrostRogue4","FrostRogue5"}},
     ["QuestNPC8"] = {Island="Snow", Mobs={"SnowBoss"}},
-    ["QuestNPC9"] = {Island="Shibuya", Mobs={"Sorcerer1"}},
+    ["QuestNPC9"] = {Island="Shibuya", Mobs={"Sorcerer1","Sorcerer2","Sorcerer3","Sorcerer4","Sorcerer5"}},
     ["QuestNPC10"] = {Island="Shibuya", Mobs={"PandaMiniBoss"}},
-    ["QuestNPC11"] = {Island="HollowIsland", Mobs={"Hollow1"}},
-    ["QuestNPC12"] = {Island="Shinjuku", Mobs={"StrongSorcerer1"}},
-    ["QuestNPC13"] = {Island="Shinjuku", Mobs={"Curse1"}},
-    ["QuestNPC14"] = {Island="Slime", Mobs={"Slime1"}},
-    ["QuestNPC15"] = {Island="Academy", Mobs={"AcademyTeacher1"}},
-    ["QuestNPC16"] = {Island="Judgement", Mobs={"Swordsman1"}},
-    ["QuestNPC17"] = {Island="Judgement", Mobs={"Quincy1"}},
-    ["QuestNPC18"] = {Island="Judgement", Mobs={"Ninja1"}},
-    ["QuestNPC19"] = {Island="Lawless", Mobs={"ArenaFighter1"}},
+    ["QuestNPC11"] = {Island="HollowIsland", Mobs={"Hollow1","Hollow2","Hollow3","Hollow4","Hollow5"}},
+    ["QuestNPC12"] = {Island="Shinjuku", Mobs={"StrongSorcerer1","StrongSorcerer2","StrongSorcerer3","StrongSorcerer4","StrongSorcerer5"}},
+    ["QuestNPC13"] = {Island="Shinjuku", Mobs={"Curse1","Curse2","Curse3","Curse4","Curse5"}},
+    ["QuestNPC14"] = {Island="Slime", Mobs={"Slime1","Slime2","Slime3","Slime4","Slime5"}},
+    ["QuestNPC15"] = {Island="Academy", Mobs={"AcademyTeacher1","AcademyTeacher2","AcademyTeacher3","AcademyTeacher4","AcademyTeacher5"}},
+    ["QuestNPC16"] = {Island="Judgement", Mobs={"Swordsman1","Swordsman2","Swordsman3","Swordsman4","Swordsman5"}},
+    ["QuestNPC17"] = {Island="Judgement", Mobs={"Quincy1","Quincy2","Quincy3","Quincy4","Quincy5"}},
+    ["QuestNPC18"] = {Island="Ninja", Mobs={"Ninja1","Ninja2","Ninja3","Ninja4","Ninja5"}},
+    ["QuestNPC19"] = {Island="Lawless", Mobs={"ArenaFighter1","ArenaFighter2","ArenaFighter3","ArenaFighter4","ArenaFighter5"}},
     ["Auto Farm Bunny"] = {Island="Easter", Mobs={"Bunny1","Bunny2","Bunny3","Bunny4","Bunny5"}}
 }
 
@@ -732,37 +732,46 @@ local function GetTarget()
     local npcs = workspace:FindFirstChild("NPCs")
     if not npcs then return nil end
     
-    -- Auto Kill Dungeon (Priority)
-    if Config.AutoKillDungeon then
-        for _, v in ipairs(npcs:GetChildren()) do
-            if v:FindFirstChild("Humanoid") and v.Humanoid.Health > 0 and v:FindFirstChild("HumanoidRootPart") then
-                return v
-            end
+    local target = nil
+    local dist = math.huge
+    local char = player.Character
+    if not char or not char:FindFirstChild("HumanoidRootPart") then return nil end
+    local myPos = char.HumanoidRootPart.Position
+
+    local function checkMob(v, mobList)
+        if not v:FindFirstChild("Humanoid") or v.Humanoid.Health <= 0 or not v:FindFirstChild("HumanoidRootPart") then
+            return false
         end
+        if not mobList then return true end
+        for _, mobName in ipairs(mobList) do
+            if v.Name:find(mobName) then return true end
+        end
+        return false
     end
 
-    -- If Farming Quest, use QuestsData
-    if Config.AutoFarmQuest then
+    local mobsToSearch = nil
+    if Config.AutoKillDungeon then
+        mobsToSearch = nil
+    elseif Config.AutoFarmQuest then
         local qd = QuestsData[Config.SelectedQuestNPC]
-        if qd then
-            for _, v in ipairs(npcs:GetChildren()) do
-                if table.find(qd.Mobs, v.Name) and v:FindFirstChild("Humanoid") and v.Humanoid.Health > 0 and v:FindFirstChild("HumanoidRootPart") then
-                    return v
+        if qd then mobsToSearch = qd.Mobs end
+    elseif Config.AutoFarm then
+        mobsToSearch = {Config.SelectedMob}
+    end
+
+    if Config.AutoKillDungeon or Config.AutoFarmQuest or Config.AutoFarm then
+        for _, v in ipairs(npcs:GetChildren()) do
+            if checkMob(v, mobsToSearch) then
+                local d = (v.HumanoidRootPart.Position - myPos).Magnitude
+                if d < dist then
+                    dist = d
+                    target = v
                 end
             end
         end
     end
     
-    -- If Manual Farm, use SelectedMob
-    if Config.AutoFarm then
-        for _, v in ipairs(npcs:GetChildren()) do
-            if v.Name == Config.SelectedMob and v:FindFirstChild("Humanoid") and v.Humanoid.Health > 0 and v:FindFirstChild("HumanoidRootPart") then
-                return v
-            end
-        end
-    end
-    
-    return nil
+    return target
 end
 
 local function GetAttackCFrame(target)
@@ -778,18 +787,12 @@ local function GetAttackCFrame(target)
     return cf * CFrame.new(0, d, 0)
 end
 
--- ===== LOOPS =====
-
 -- Target Cache
 local currentTarget = nil
 task.spawn(function()
-    while task.wait(0.25) do -- Search targets 4 times per second, NOT 60!
+    while task.wait(0.1) do
         if getgenv().SailorHub_Cancel then break end
-        if Config.AutoFarm or Config.AutoFarmQuest or Config.AutoKillDungeon or Config.AutoGlobalBoss then
-            currentTarget = GetTarget()
-        else
-            currentTarget = nil
-        end
+        currentTarget = GetTarget()
     end
 end)
 
