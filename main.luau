@@ -932,25 +932,12 @@ local BuildDate = "April 25, 2026 - 01:17"
 print("Sailor Hub Loaded | Version: " .. Library.Version .. " | Build: " .. BuildDate)
 Window:Notify("Sailor Hub Loaded", "Version: " .. Library.Version .. "\nBuild: " .. BuildDate)
 
--- Live User Count Loop
-task.spawn(function()
-    local workerUrl = "https://sailor-hub.saraescobar0806.workers.dev/count"
-    local myId = player.UserId
-    
-    while task.wait(120) do -- Update every 2 minutes
-        if getgenv().SailorHub_Cancel then break end
-        pcall(function()
-            local count = game:HttpGet(workerUrl .. "?id=" .. myId)
-            if Window.UserCountLabel then
-                Window.UserCountLabel.Text = "Live Users: " .. count
-            end
-        end)
-    end
-end)
--- Initial call
+-- Initial call (Optimized for Free Tier: Only 1 ping per session)
 task.spawn(function()
     pcall(function()
         local count = game:HttpGet("https://sailor-hub.saraescobar0806.workers.dev/count?id=" .. player.UserId)
-        if Window.UserCountLabel then Window.UserCountLabel.Text = "Live Users: " .. count end
+        if Window.UserCountLabel then 
+            Window.UserCountLabel.Text = "Recent Users: " .. count 
+        end
     end)
 end)
