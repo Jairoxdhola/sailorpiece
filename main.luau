@@ -1086,6 +1086,7 @@ end)
 
 -- Changelog Tab
 ChangelogTab:CreateLabel("--- Latest Updates ---")
+ChangelogTab:CreateLabel("[v1.6.3] 12:14 PM - FIXED Movement Lock when farm is off")
 ChangelogTab:CreateLabel("[v1.6.2] 12:05 PM - FIXED Auto-Save (UI Visuals) & Shaking bug")
 ChangelogTab:CreateLabel("[v1.6.1] 12:02 PM - Added Auto Kill for Infinite Tower")
 ChangelogTab:CreateLabel("[v1.6.0] 12:00 PM - Added Auto Infinite Tower & Atomic Boss")
@@ -1279,13 +1280,15 @@ end)
 getgenv().SailorHub_Connection = game:GetService("RunService").Heartbeat:Connect(function()
     local char = player.Character
     if char and char:FindFirstChild("HumanoidRootPart") then
+        local anyFarm = Config.AutoFarm or Config.AutoFarmQuest or Config.AutoBossFarm or Config.AutoKillDungeon or Config.AutoSummon or Config.AutoInfiniteTower or (Config.SelectedBoss ~= "None")
+        
         if currentTarget then
             pcall(function()
                 char.HumanoidRootPart.Velocity = Vector3.new(0,0,0)
                 char.HumanoidRootPart.CFrame = GetAttackCFrame(currentTarget)
             end)
-        else
-            -- Stabilizer: Stop shaking when no target
+        elseif anyFarm then
+            -- Stabilizer: Only stop shaking if a farm is actually enabled
             char.HumanoidRootPart.Velocity = Vector3.new(0,0,0)
         end
     end
@@ -1411,9 +1414,9 @@ task.spawn(function()
     end
 end)
 
-local BuildDate = "April 25, 2026 - 12:05"
-print("Sailor Hub Loaded | Version: v1.6.2 | Build: " .. BuildDate)
-Window:Notify("Sailor Hub Loaded", "Version: v1.6.2\nBuild: " .. BuildDate)
+local BuildDate = "April 25, 2026 - 12:14"
+print("Sailor Hub Loaded | Version: v1.6.3 | Build: " .. BuildDate)
+Window:Notify("Sailor Hub Loaded", "Version: v1.6.3\nBuild: " .. BuildDate)
 
 -- Initial call (Optimized for Free Tier: Only 1 ping per session)
 task.spawn(function()
