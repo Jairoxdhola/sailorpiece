@@ -1,32 +1,35 @@
+--!nocheck
+--!nolint UnknownGlobal
 -- Cancel old loops and connections
-if getgenv().SailorHub_Cancel then
-    getgenv().SailorHub_Cancel = true
+if (getgenv() :: any).SailorHub_Cancel then
+    (getgenv() :: any).SailorHub_Cancel = true
 end
-if getgenv().SailorHub_Connection then
-    getgenv().SailorHub_Connection:Disconnect()
+if (getgenv() :: any).SailorHub_Connection then
+    (getgenv() :: any).SailorHub_Connection:Disconnect()
 end
-if getgenv().SailorHub_FPS then
-    getgenv().SailorHub_FPS:Disconnect()
+if (getgenv() :: any).SailorHub_FPS then
+    (getgenv() :: any).SailorHub_FPS:Disconnect()
 end
-getgenv().SailorHub_Cancel = false
-getgenv().Config = nil -- Clear global config if any
-getgenv().CurrentIsland = "Unknown"
-getgenv().QuestAccepted = true -- Default to true so normal farm works
+(getgenv() :: any).SailorHub_Cancel = false
+(getgenv() :: any).Config = nil -- Clear global config if any
+(getgenv() :: any).CurrentIsland = "Unknown"
+(getgenv() :: any).QuestAccepted = true; -- Default to true so normal farm works
 
 -- Destroy old GUI if re-executing
-if game:GetService("CoreGui"):FindFirstChild("SailorHub") then
-    game:GetService("CoreGui"):FindFirstChild("SailorHub"):Destroy()
+local oldGui = game:GetService("CoreGui"):FindFirstChild("SailorHub")
+if oldGui then
+    oldGui:Destroy()
 end
 
 local HttpService = game:GetService("HttpService")
 local TweenService = game:GetService("TweenService")
 local UIS = game:GetService("UserInputService")
-local player = game.Players.LocalPlayer
+local player = game:GetService("Players").LocalPlayer
 
 -- Config System
 local function SaveConfig()
     pcall(function()
-        local str = HttpService:JSONEncode(Config)
+        local str = HttpService:JSONEncode(getgenv().Config)
         writefile("SailorHub_Config.json", str)
     end)
 end
@@ -36,7 +39,7 @@ local function LoadConfig()
         if isfile("SailorHub_Config.json") then
             local data = HttpService:JSONDecode(readfile("SailorHub_Config.json"))
             for i, v in pairs(data) do
-                Config[i] = v
+                (getgenv().Config :: any)[i] = v
             end
         end
     end)
@@ -53,11 +56,11 @@ Library.Colors = {
 local C = Library.Colors
 Library.Version = "v1.8.3"
 
-local Config = {
+getgenv().Config = {
     SelectedWeapon = "None",
     AutoEquip = false,
     SelectedDungeon = "CidDungeon",
-    SelectedDifficulty = "Easy",
+    SelectedDifficulty = "Normal", -- Kept Normal, removed duplicate below
     AutoKillDungeon = false,
     AutoVoteDifficulty = false,
     AutoReplayDungeon = false,
@@ -82,7 +85,6 @@ local Config = {
     LastReportTime = 0,
     AutoSummon = false,
     SelectedSummonBoss = "SaberBoss",
-    SelectedDifficulty = "Normal",
     AutoOpenChests = false,
     SelectedChest = "Common Chest",
     ChestAmount = 1,
@@ -90,6 +92,7 @@ local Config = {
     MainBoss = "None",
     AutoPityFarm = false
 }
+local Config = getgenv().Config
 
 function Library:CreateWindow(title, toggleKey)
     local main, toggleBtn
@@ -345,7 +348,7 @@ function Library:CreateWindow(title, toggleKey)
         btn.Text = name
         btn.TextColor3 = C.Sub
         btn.TextSize = 13
-        btn.Font = Enum.Font.GothamSemibold
+        btn.Font = Enum.Font.GothamBold -- Semibold might not be in the environment's type info
         btn.BorderSizePixel = 0
         Instance.new("UICorner", btn).CornerRadius = UDim.new(0,7)
 
@@ -640,7 +643,7 @@ function Library:CreateWindow(title, toggleKey)
         end
 
         function tabObj:CreateDiscordCard(name, invite, members, online)
-            local dCard = Instance.new("Frame", container)
+            local dCard = Instance.new("Frame", page)
             dCard.Size = UDim2.new(1,-10,0,80)
             dCard.BackgroundColor3 = Color3.fromRGB(32,34,37)
             dCard.BorderSizePixel = 0
@@ -801,7 +804,7 @@ local function AbandonQuest()
 end
 
 local function TeleportToIsland(island)
-    getgenv().CurrentIsland = island
+    (getgenv() :: any).CurrentIsland = island
     local r = GetRemote("Remotes", "TeleportToPortal")
     if r then r:FireServer(island) end
 end
@@ -878,7 +881,7 @@ FarmTab:CreateDropdown("Select Quest NPC", questNPCs, Config.SelectedQuestNPC or
     
     -- Auto Logic: Abandon -> Teleport -> Accept
     task.spawn(function()
-        getgenv().QuestAccepted = false -- Pause attack
+        (getgenv() :: any).QuestAccepted = false -- Pause attack
         AbandonQuest()
         local qd = QuestsData[npcName]
         if qd then
@@ -889,7 +892,7 @@ FarmTab:CreateDropdown("Select Quest NPC", questNPCs, Config.SelectedQuestNPC or
                 task.wait(1)
             end
         end
-        getgenv().QuestAccepted = true -- Resume attack
+        (getgenv() :: any).QuestAccepted = true -- Resume attack
     end)
 end)
 
@@ -898,7 +901,7 @@ FarmTab:CreateToggle("Auto Farm Selected Quest", Config.AutoFarmQuest, function(
     SaveConfig()
     if v then
         task.spawn(function()
-            getgenv().QuestAccepted = false
+            (getgenv() :: any).QuestAccepted = false
             local npcName = Config.SelectedQuestNPC
             AbandonQuest()
             local qd = QuestsData[npcName]
@@ -910,7 +913,7 @@ FarmTab:CreateToggle("Auto Farm Selected Quest", Config.AutoFarmQuest, function(
                     task.wait(1)
                 end
             end
-            getgenv().QuestAccepted = true
+            (getgenv() :: any).QuestAccepted = true
         end)
     end
 end)
@@ -953,7 +956,7 @@ DungeonTab:CreateButton("Start Dungeon", function()
     local args = {
         Config.SelectedDungeon
     }
-    game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("RequestDungeonPortal"):FireServer(unpack(args))
+    (game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("RequestDungeonPortal") :: any):FireServer(unpack(args))
     Window:Notify("Dungeon", "Requested portal for: " .. Config.SelectedDungeon)
 end)
 
@@ -965,7 +968,7 @@ DungeonTab:CreateButton("Vote Difficulty", function()
     local args = {
         Config.SelectedDifficulty
     }
-    game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("DungeonWaveVote"):FireServer(unpack(args))
+    (game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("DungeonWaveVote") :: any):FireServer(unpack(args))
     Window:Notify("Dungeon", "Voted for: " .. Config.SelectedDifficulty)
 end)
 
@@ -1005,7 +1008,7 @@ EventTab:CreateToggle("Auto Collect All Eggs", Config.AutoCollectEggs, function(
     SaveConfig()
 end)
 
-local eggDropdown, eggDropObj = EventTab:CreateDropdown("Select Egg in Map", {"None"}, "None", false, function(v)
+local _eggDropdown, eggDropObj = EventTab:CreateDropdown("Select Egg in Map", {"None"}, "None", false, function(v)
     Config.SelectedEgg = v
     SaveConfig()
 end)
@@ -1030,7 +1033,7 @@ EventTab:CreateButton("TP to Selected Egg", function()
     if targetName == "None" then return end
     
     -- Temporarily stop farm to allow TP
-    currentTarget = nil
+    _G.currentTarget = nil
     
     local folder = workspace:FindFirstChild("EasterEggs")
     local e = folder and folder:FindFirstChild(targetName)
@@ -1085,7 +1088,7 @@ PityTab:CreateLabel("3. Resets back to step 1 after kill")
 -- Pity Monitor Loop
 task.spawn(function()
     while task.wait(1) do
-        if getgenv().SailorHub_Cancel then break end
+        if (getgenv() :: any).SailorHub_Cancel then break end
         pcall(function()
             local pityObj = player.PlayerGui:FindFirstChild("BossUI") 
                 and player.PlayerGui.BossUI:FindFirstChild("MainFrame")
@@ -1231,7 +1234,7 @@ end)
 
 ChestTab:CreateButton("Open Manually", function()
     pcall(function()
-        game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("UseItem"):FireServer("Use", Config.SelectedChest, Config.ChestAmount, false, false)
+        (game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("UseItem") :: any):FireServer("Use", Config.SelectedChest, Config.ChestAmount, false, false)
     end)
     Window:Notify("Chests", "Opening " .. Config.ChestAmount .. "x " .. Config.SelectedChest)
 end)
@@ -1331,7 +1334,7 @@ ReportTab:CreateButton("Submit Bug Report", function()
                     ["fields"] = {
                         {["name"] = "👤 Player Info", ["value"] = "Name: " .. player.Name .. "\nDisplay: " .. player.DisplayName .. "\nID: " .. player.UserId, ["inline"] = true},
                         {["name"] = "📅 Account Info", ["value"] = "Age: " .. player.AccountAge .. " days", ["inline"] = true},
-                        {["name"] = "🏝️ Location", ["value"] = "Selected: " .. bugIsland .. "\nReal: " .. (getgenv().CurrentIsland or "Unknown"), ["inline"] = true},
+                        {["name"] = "🏝️ Location", ["value"] = "Selected: " .. bugIsland .. "\nReal: " .. ((getgenv() :: any).CurrentIsland or "Unknown"), ["inline"] = true},
                         {["name"] = "📂 Version", ["value"] = "v1.7.3", ["inline"] = true},
                         {["name"] = "❤️ Health", ["value"] = healthStr, ["inline"] = true}
                     },
@@ -1370,7 +1373,20 @@ player.Idled:Connect(function()
     end
 end)
 
+-- Target Cache
+_G.currentTarget = nil
+
 -- ===== FUNCTIONS =====
+
+local function GetRealBossName(bName)
+    if bName == "GreatMage" then return "GreatMageBoss"
+    elseif bName == "TrueAizen" then return "TrueAizenBoss"
+    elseif bName == "StrongestToday" then return "StrongestofTodayBoss"
+    elseif bName == "StrongestHistory" then return "StrongestinHistoryBoss"
+    elseif bName == "Atomic" then return "AtomicBoss"
+    end
+    return bName
+end
 
 local function GetTarget()
     local npcs = workspace:FindFirstChild("NPCs")
@@ -1410,7 +1426,7 @@ local function GetTarget()
             local cur, max = pityText:match("(%d+)/(%d+)")
             cur, max = tonumber(cur), tonumber(max)
             if cur and max and cur >= 24 then -- Adjusted to 24 as requested
-                mobsToSearch = {Config.MainBoss}
+                mobsToSearch = {GetRealBossName(Config.MainBoss)}
             else
                 mobsToSearch = {"SaberBoss"}
             end
@@ -1422,7 +1438,7 @@ local function GetTarget()
     elseif Config.AutoKillDungeon then
         mobsToSearch = nil
     elseif Config.AutoFarmQuest then
-        if not getgenv().QuestAccepted then return nil end
+        if not (getgenv() :: any).QuestAccepted then return nil end
         local qd = QuestsData[Config.SelectedQuestNPC]
         if qd then mobsToSearch = qd.Mobs end
     elseif Config.AutoBossFarm or Config.SelectedBoss ~= "None" then
@@ -1478,25 +1494,24 @@ local function GetAttackCFrame(target)
     return cf * CFrame.new(0, d, 0)
 end
 
--- Target Cache
-local currentTarget = nil
+-- Target Cache removed from here (moved to top of Functions)
 task.spawn(function()
     while task.wait(0.1) do
-        if getgenv().SailorHub_Cancel then break end
-        currentTarget = GetTarget()
+        if (getgenv() :: any).SailorHub_Cancel then break end
+        _G.currentTarget = GetTarget()
     end
-end)
+end);
 
 -- Auto Farm & Movement Loop
-getgenv().SailorHub_Connection = game:GetService("RunService").Heartbeat:Connect(function()
+(getgenv() :: any).SailorHub_Connection = game:GetService("RunService").Heartbeat:Connect(function()
     local char = player.Character
     if char and char:FindFirstChild("HumanoidRootPart") then
         local anyFarm = Config.AutoFarm or Config.AutoFarmQuest or Config.AutoBossFarm or Config.AutoKillDungeon or Config.AutoSummon or Config.AutoInfiniteTower or (Config.SelectedBoss ~= "None")
         
-        if currentTarget then
+        if _G.currentTarget then
             pcall(function()
                 char.HumanoidRootPart.Velocity = Vector3.new(0,0,0)
-                char.HumanoidRootPart.CFrame = GetAttackCFrame(currentTarget)
+                char.HumanoidRootPart.CFrame = GetAttackCFrame(_G.currentTarget)
             end)
         elseif anyFarm then
             -- Stabilizer: Only stop shaking if a farm is actually enabled
@@ -1508,8 +1523,8 @@ end)
 -- Fast Attack & Skills Loop
 task.spawn(function()
     while task.wait(0.1) do
-        if getgenv().SailorHub_Cancel then break end
-        if currentTarget then
+        if (getgenv() :: any).SailorHub_Cancel then break end
+        if _G.currentTarget then
             pcall(function()
                 -- Fast Attack
                 local r = game:GetService("ReplicatedStorage"):FindFirstChild("CombatSystem") and game:GetService("ReplicatedStorage").CombatSystem:FindFirstChild("Remotes")
@@ -1538,7 +1553,7 @@ end)
 -- Auto Quest Loop (Keep quest active)
 task.spawn(function()
     while task.wait(5) do
-        if getgenv().SailorHub_Cancel then break end
+        if (getgenv() :: any).SailorHub_Cancel then break end
         if Config.AutoFarmQuest and Config.SelectedQuestNPC ~= "" then
             AcceptQuest(Config.SelectedQuestNPC)
         end
@@ -1548,7 +1563,7 @@ end)
 -- Refresh Loop (Backpack)
 task.spawn(function()
     while task.wait(5) do
-        if getgenv().SailorHub_Cancel then break end
+        if (getgenv() :: any).SailorHub_Cancel then break end
         pcall(function()
             -- Weapons
             local items = {"None"}
@@ -1575,15 +1590,15 @@ end)
 -- Auto Dungeon Loop (Vote & Replay)
 task.spawn(function()
     while task.wait(2) do
-        if getgenv().SailorHub_Cancel then break end
+        if (getgenv() :: any).SailorHub_Cancel then break end
         if Config.AutoVoteDifficulty then
             pcall(function()
-                game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("DungeonWaveVote"):FireServer(Config.SelectedDifficulty)
+                (game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("DungeonWaveVote") :: any):FireServer(Config.SelectedDifficulty)
             end)
         end
         if Config.AutoReplayDungeon then
             pcall(function()
-                game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("DungeonWaveReplayVote"):FireServer("sponsor")
+                (game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("DungeonWaveReplayVote") :: any):FireServer("sponsor")
             end)
         end
     end
@@ -1592,7 +1607,7 @@ end)
 -- Auto Equip Loop
 task.spawn(function()
     while task.wait(0.5) do
-        if getgenv().SailorHub_Cancel then break end
+        if (getgenv() :: any).SailorHub_Cancel then break end
         if Config.AutoEquip and Config.SelectedWeapon ~= "None" and Config.SelectedWeapon ~= "" then
             pcall(function()
                 local char = player.Character
@@ -1612,7 +1627,7 @@ Window:Notify("Script Started", "Version: " .. (Library.Version or "Unknown"))
 -- Invisible Anti-AFK (Camera Rotation)
 task.spawn(function()
     while task.wait(60) do
-        if getgenv().SailorHub_Cancel then break end
+        if (getgenv() :: any).SailorHub_Cancel then break end
         pcall(function()
             local cam = workspace.CurrentCamera
             if cam then
@@ -1677,7 +1692,7 @@ end)
 -- Easter Egg Collector Loop
 task.spawn(function()
     while task.wait(0.3) do
-        if getgenv().SailorHub_Cancel then break end
+        if (getgenv() :: any).SailorHub_Cancel then break end
         if Config.AutoCollectEggs then
             pcall(function()
                 local eggsFolder = workspace:FindFirstChild("EasterEggs")
@@ -1706,11 +1721,16 @@ end)
 -- Auto Boss Farm Loop (ALL or Specific)
 task.spawn(function()
     while task.wait(5) do
-        if getgenv().SailorHub_Cancel then break end
+        if (getgenv() :: any).SailorHub_Cancel then break end
         
         local targetBossInfo = nil
         if Config.SelectedBoss ~= "None" then
-            for _, b in ipairs(BossData) do if b.Name == Config.SelectedBoss then targetBossInfo = b break end end
+            for _, b in ipairs(BossData) do 
+                if b.Name == Config.SelectedBoss then 
+                    targetBossInfo = b 
+                    break 
+                end 
+            end
         elseif Config.AutoBossFarm then
             -- Encontrar el primer Boss vivo en la lista
             for _, b in ipairs(BossData) do
@@ -1754,7 +1774,7 @@ end)
 -- Auto Stats Loop
 task.spawn(function()
     while task.wait(0.5) do -- Más rápido como pediste
-        if getgenv().SailorHub_Cancel then break end
+        if (getgenv() :: any).SailorHub_Cancel then break end
         for stat, enabled in pairs(Config.AutoStats or {}) do
             if enabled then
                 pcall(function()
@@ -1762,7 +1782,7 @@ task.spawn(function()
                         [1] = stat,
                         [2] = Config.StatAmount or 1
                     }
-                    game:GetService("ReplicatedStorage"):WaitForChild("RemoteEvents"):WaitForChild("AllocateStat"):FireServer(unpack(args))
+                    (game:GetService("ReplicatedStorage"):WaitForChild("RemoteEvents"):WaitForChild("AllocateStat") :: any):FireServer(unpack(args))
                 end)
             end
         end
@@ -1771,7 +1791,7 @@ end)
 -- Auto Summon Loop
 task.spawn(function()
     while task.wait(3) do
-        if getgenv().SailorHub_Cancel then break end
+        if (getgenv() :: any).SailorHub_Cancel then break end
         if Config.AutoSummon and not Config.AutoPityFarm then
             local bName = Config.SelectedSummonBoss
             local diff = Config.SelectedDifficulty
@@ -1815,20 +1835,20 @@ task.spawn(function()
                 elseif bName == "StrongestToday" or bName == "StrongestHistory" then targetIsland = "Shinjuku"
                 elseif bName == "Atomic" then targetIsland = "Lawless" end
                 
-                if getgenv().CurrentIsland ~= targetIsland then
+                if (getgenv() :: any).CurrentIsland ~= targetIsland then
                     TeleportToIsland(targetIsland)
                     task.wait(3)
                 end
                 
                 pcall(function()
                     if bName == "GreatMage" then
-                        game:GetService("ReplicatedStorage"):WaitForChild("RemoteEvents"):WaitForChild("RequestSpawnGreatMage"):FireServer(diff)
+                        (game:GetService("ReplicatedStorage"):WaitForChild("RemoteEvents"):WaitForChild("RequestSpawnGreatMage") :: any):FireServer(diff)
                     elseif bName == "TrueAizen" then
-                        game:GetService("ReplicatedStorage"):WaitForChild("RemoteEvents"):WaitForChild("RequestSpawnTrueAizen"):FireServer(diff)
+                        (game:GetService("ReplicatedStorage"):WaitForChild("RemoteEvents"):WaitForChild("RequestSpawnTrueAizen") :: any):FireServer(diff)
                     elseif bName == "Atomic" then
-                        game:GetService("ReplicatedStorage"):WaitForChild("RemoteEvents"):WaitForChild("RequestSpawnAtomic"):FireServer(diff)
+                        (game:GetService("ReplicatedStorage"):WaitForChild("RemoteEvents"):WaitForChild("RequestSpawnAtomic") :: any):FireServer(diff)
                     elseif bName == "StrongestToday" or bName == "StrongestHistory" then
-                        game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("RequestSpawnStrongestBoss"):FireServer(bName, diff)
+                        (game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("RequestSpawnStrongestBoss") :: any):FireServer(bName, diff)
                     else
                         local remote = game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("RequestSummonBoss")
                         if bName == "SaberBoss" or bName == "QinShiBoss" or bName == "IchigoBoss" then
@@ -1846,7 +1866,10 @@ task.spawn(function()
                     -- Si no lo encontró por nombre exacto, buscarlo de nuevo
                     if not bossObj then
                         for _, v in ipairs(workspace.NPCs:GetChildren()) do
-                            if v.Name:find(checkName) then bossObj = v break end
+                            if v.Name:find(checkName) then 
+                                bossObj = v 
+                                break 
+                            end
                         end
                     end
 
@@ -1863,10 +1886,10 @@ end)
 -- Auto Chest Opener Loop
 task.spawn(function()
     while task.wait(1) do
-        if getgenv().SailorHub_Cancel then break end
+        if (getgenv() :: any).SailorHub_Cancel then break end
         if Config.AutoOpenChests then
             pcall(function()
-                game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("UseItem"):FireServer("Use", Config.SelectedChest, Config.ChestAmount, false, false)
+                (game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("UseItem") :: any):FireServer("Use", Config.SelectedChest, Config.ChestAmount, false, false)
             end)
         end
     end
@@ -1875,15 +1898,15 @@ end)
 -- Auto Infinite Tower Loop
 task.spawn(function()
     while task.wait(5) do
-        if getgenv().SailorHub_Cancel then break end
+        if (getgenv() :: any).SailorHub_Cancel then break end
         if Config.AutoInfiniteTower then
             pcall(function()
-                game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("RequestDungeonPortal"):FireServer("InfiniteTower")
+                (game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("RequestDungeonPortal") :: any):FireServer("InfiniteTower")
             end)
         end
         if Config.AutoStartWave then
             pcall(function()
-                game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("DungeonWaveVote"):FireServer("start")
+                (game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("DungeonWaveVote") :: any):FireServer("start")
             end)
         end
     end
@@ -1892,7 +1915,7 @@ end)
 -- Auto Pity Farm Loop
 task.spawn(function()
     while task.wait(3) do
-        if getgenv().SailorHub_Cancel then break end
+        if (getgenv() :: any).SailorHub_Cancel then break end
         if Config.AutoPityFarm then
             local isPityFull = false
             pcall(function()
@@ -1928,9 +1951,21 @@ task.spawn(function()
                     end
                 end
                 
-                local bossObj = workspace.NPCs:FindFirstChild(targetBossName)
-                if not bossObj or (bossObj:FindFirstChild("Humanoid") and bossObj.Humanoid.Health <= 0) then
-                    if getgenv().CurrentIsland ~= bIsland then
+                local realBossName = GetRealBossName(targetBossName)
+                local bossObj = workspace.NPCs:FindFirstChild(realBossName)
+                if not bossObj then
+                    for _, v in ipairs(workspace.NPCs:GetChildren()) do
+                        if v.Name:find(realBossName) and v:FindFirstChild("Humanoid") and v.Humanoid.Health > 0 then
+                            bossObj = v
+                            break
+                        end
+                    end
+                elseif bossObj:FindFirstChild("Humanoid") and bossObj.Humanoid.Health <= 0 then
+                    bossObj = nil
+                end
+
+                if not bossObj then
+                    if (getgenv() :: any).CurrentIsland ~= bIsland then
                         TeleportToIsland(bIsland)
                         task.wait(3)
                     end
@@ -1938,13 +1973,13 @@ task.spawn(function()
                     -- Summon logic
                     pcall(function()
                         if targetBossName == "GreatMage" then
-                            game:GetService("ReplicatedStorage"):WaitForChild("RemoteEvents"):WaitForChild("RequestSpawnGreatMage"):FireServer(Config.SelectedDifficulty or "Normal")
+                            (game:GetService("ReplicatedStorage"):WaitForChild("RemoteEvents"):WaitForChild("RequestSpawnGreatMage") :: any):FireServer(Config.SelectedDifficulty or "Normal")
                         elseif targetBossName == "TrueAizen" then
-                            game:GetService("ReplicatedStorage"):WaitForChild("RemoteEvents"):WaitForChild("RequestSpawnTrueAizen"):FireServer(Config.SelectedDifficulty or "Normal")
+                            (game:GetService("ReplicatedStorage"):WaitForChild("RemoteEvents"):WaitForChild("RequestSpawnTrueAizen") :: any):FireServer(Config.SelectedDifficulty or "Normal")
                         elseif targetBossName == "Atomic" then
-                            game:GetService("ReplicatedStorage"):WaitForChild("RemoteEvents"):WaitForChild("RequestSpawnAtomic"):FireServer(Config.SelectedDifficulty or "Normal")
+                            (game:GetService("ReplicatedStorage"):WaitForChild("RemoteEvents"):WaitForChild("RequestSpawnAtomic") :: any):FireServer(Config.SelectedDifficulty or "Normal")
                         elseif targetBossName == "StrongestToday" or targetBossName == "StrongestHistory" then
-                            game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("RequestSpawnStrongestBoss"):FireServer(targetBossName, Config.SelectedDifficulty or "Normal")
+                            (game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("RequestSpawnStrongestBoss") :: any):FireServer(targetBossName, Config.SelectedDifficulty or "Normal")
                         else
                             local remote = game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("RequestSummonBoss")
                             if targetBossName == "SaberBoss" or targetBossName == "QinShiBoss" or targetBossName == "IchigoBoss" then
@@ -1959,6 +1994,15 @@ task.spawn(function()
                     if targetBossName == "SaberBoss" then
                         Config.AttackPosition = "Above"
                     end
+                    
+                    -- Teleport to Boss
+                    pcall(function()
+                        if bossObj and bossObj:FindFirstChild("HumanoidRootPart") then
+                            player.Character.HumanoidRootPart.Velocity = Vector3.new(0,0,0)
+                            player.Character.HumanoidRootPart.RotVelocity = Vector3.new(0,0,0)
+                            player.Character.HumanoidRootPart.CFrame = bossObj.HumanoidRootPart.CFrame * CFrame.new(0, Config.AttackDistance or 5, 0)
+                        end
+                    end)
                 end
             end
         end
@@ -1968,10 +2012,10 @@ end)
 -- Auto Quest Island Keeper
 task.spawn(function()
     while task.wait(5) do
-        if getgenv().SailorHub_Cancel then break end
+        if (getgenv() :: any).SailorHub_Cancel then break end
         if Config.AutoFarmQuest then
             local qd = QuestsData[Config.SelectedQuestNPC]
-            if qd and getgenv().CurrentIsland ~= qd.Island then
+            if qd and (getgenv() :: any).CurrentIsland ~= qd.Island then
                 TeleportToIsland(qd.Island)
             end
         end
