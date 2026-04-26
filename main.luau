@@ -55,6 +55,7 @@ Library.Colors = {
 }
 local C = Library.Colors
 Library.Version = "v1.8.6"
+Library.LastUpdated = "April 26, 2026 - 10:53 AM"
 
 getgenv().Config = {
     SelectedWeapon = "None",
@@ -1252,10 +1253,10 @@ end)
 
 -- Changelog Tab
 ChangelogTab:CreateLabel("--- Latest Updates ---")
-ChangelogTab:CreateLabel("[v1.8.6] JUST NOW - ADDED AlucardBoss to Auto Boss & Pity Farm")
-ChangelogTab:CreateLabel("[v1.8.6] JUST NOW - FIXED Boss Teleportation logic (Strongest/Aizen)")
-ChangelogTab:CreateLabel("[v1.8.6] JUST NOW - FIXED Movement lock bug when waiting for boss")
-ChangelogTab:CreateLabel("[v1.8.3] 7:45 PM - REFINED Auto Pity Farm (Fixed SaberBoss builder + All Bosses support)")
+ChangelogTab:CreateLabel("[" .. Library.Version .. "] " .. Library.LastUpdated .. " - ADDED AlucardBoss to Auto Boss & Pity Farm")
+ChangelogTab:CreateLabel("[" .. Library.Version .. "] " .. Library.LastUpdated .. " - FIXED Boss Teleportation logic (Strongest/Aizen)")
+ChangelogTab:CreateLabel("[" .. Library.Version .. "] " .. Library.LastUpdated .. " - FIXED Movement lock bug when waiting for boss")
+ChangelogTab:CreateLabel("[v1.8.3] April 25 - 7:45 PM - REFINED Auto Pity Farm (Fixed SaberBoss builder + All Bosses support)")
 ChangelogTab:CreateLabel("[v1.8.2] 4:42 PM - ADDED Live Presence System (Join/Leave Tracking)")
 ChangelogTab:CreateLabel("[v1.8.1] 1:30 PM - SIMPLIFIED Community (Buttons only)")
 ChangelogTab:CreateLabel("[v1.8.0] 1:28 PM - FIXED Discord Widget (Native Component)")
@@ -1649,7 +1650,7 @@ task.spawn(function()
     end
 end)
 
-local BuildDate = os.date("%B %d, %Y - %I:%M %p")
+local BuildDate = Library.LastUpdated
 print("Sailor Hub Loaded | Version: " .. Library.Version .. " | Build: " .. BuildDate)
 Window:Notify("Sailor Hub Loaded", "Version: " .. Library.Version .. "\nBuild: " .. BuildDate)
 
