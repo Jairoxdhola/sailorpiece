@@ -51,7 +51,7 @@ Library.Colors = {
     TogOff = Color3.fromRGB(45,45,65), TogOn = Color3.fromRGB(100,80,255),
 }
 local C = Library.Colors
-Library.Version = "v1.5.4"
+Library.Version = "v1.8.3"
 
 local Config = {
     SelectedWeapon = "None",
@@ -85,7 +85,10 @@ local Config = {
     SelectedDifficulty = "Normal",
     AutoOpenChests = false,
     SelectedChest = "Common Chest",
-    ChestAmount = 1
+    ChestAmount = 1,
+    PityBoss = "None",
+    MainBoss = "None",
+    AutoPityFarm = false
 }
 
 function Library:CreateWindow(title, toggleKey)
@@ -277,12 +280,16 @@ function Library:CreateWindow(title, toggleKey)
         main.Visible = not main.Visible
     end)
 
-    -- Sidebar
-    local side = Instance.new("Frame", main)
+    -- Sidebar (Now Scrolling for many tabs)
+    local side = Instance.new("ScrollingFrame", main)
     side.Size = UDim2.new(0,150,1,-40)
     side.Position = UDim2.new(0,0,0,40)
     side.BackgroundColor3 = C.Sidebar
     side.BorderSizePixel = 0
+    side.ScrollBarThickness = 2
+    side.ScrollBarImageColor3 = C.Accent
+    side.CanvasSize = UDim2.new(0,0,0,0)
+    side.AutomaticCanvasSize = Enum.AutomaticSize.Y
     local sl = Instance.new("UIListLayout", side)
     sl.Padding = UDim.new(0,4)
     sl.SortOrder = Enum.SortOrder.LayoutOrder
@@ -733,6 +740,8 @@ local BossData = {
     {Name = "StrongestShinobiBoss", Island = "Ninja"}
 }
 
+local summonBosses = {"SaberBoss", "QinShiBoss", "IchigoBoss", "GilgameshBoss", "BlessedMaidenBoss", "SaberAlterBoss", "MoonSlayerBoss", "IceQueenBoss", "GreatMage", "TrueAizen", "StrongestToday", "StrongestHistory", "Atomic"}
+
 -- Load saved settings immediately
 LoadConfig()
 
@@ -748,6 +757,7 @@ local EventTab = Window:CreateTab("Event")
 local StatsTab = Window:CreateTab("Stats")
 local SummonTab = Window:CreateTab("Summon Boss")
 local ChestTab = Window:CreateTab("Chest Opener")
+local PityTab = Window:CreateTab("Auto Boss + Pity")
 local ReportTab = Window:CreateTab("Bug Report")
 local ChangelogTab = Window:CreateTab("Changelog")
 
@@ -1038,6 +1048,59 @@ EventTab:CreateButton("TP to Selected Egg", function()
     end
 end)
 
+-- Pity Tab Setup
+PityTab:CreateLabel("--- Pity Status ---")
+local PityLabel = PityTab:CreateLabel("Current Pity: Loading...")
+
+PityTab:CreateLabel("--- Build Pity (25/25) ---")
+PityTab:CreateLabel("Current Strategy: Auto-Summoning SaberBoss")
+
+PityTab:CreateLabel("--- Main Boss (Pity Kill) ---")
+local combinedBossList = {"None"}
+for _, b in ipairs(BossData) do table.insert(combinedBossList, b.Name) end
+for _, b in ipairs(summonBosses) do table.insert(combinedBossList, b) end
+
+PityTab:CreateDropdown("Select Main Boss", combinedBossList, Config.MainBoss or "None", false, function(v)
+    Config.MainBoss = v
+    SaveConfig()
+end)
+
+PityTab:CreateToggle("Enable Pity Smart Farm", Config.AutoPityFarm, function(v)
+    Config.AutoPityFarm = v
+    if v then
+        Config.AutoSummon = false
+        Config.AutoBossFarm = false
+        Config.AutoFarm = false
+        Config.AutoFarmQuest = false
+        Window:Notify("Pity Farm", "Other farms disabled to avoid conflicts.")
+    end
+    SaveConfig()
+end)
+
+PityTab:CreateLabel("--- How it works ---")
+PityTab:CreateLabel("1. Kills 'Pity Boss' until 25/25")
+PityTab:CreateLabel("2. When 25/25, goes to 'Main Boss'")
+PityTab:CreateLabel("3. Resets back to step 1 after kill")
+
+-- Pity Monitor Loop
+task.spawn(function()
+    while task.wait(1) do
+        if getgenv().SailorHub_Cancel then break end
+        pcall(function()
+            local pityObj = player.PlayerGui:FindFirstChild("BossUI") 
+                and player.PlayerGui.BossUI:FindFirstChild("MainFrame")
+                and player.PlayerGui.BossUI.MainFrame:FindFirstChild("BossHPBar")
+                and player.PlayerGui.BossUI.MainFrame.BossHPBar:FindFirstChild("Pity")
+            
+            if pityObj then
+                PityLabel.Text = "Current Status: " .. pityObj.ContentText
+            else
+                PityLabel.Text = "Current Status: Pity UI not found"
+            end
+        end)
+    end
+end)
+
 -- Boss Farm Logic
 FarmTab:CreateLabel("--- Bosses ---")
 FarmTab:CreateToggle("Auto Farm ALL Bosses", Config.AutoBossFarm, function(v)
@@ -1131,7 +1194,6 @@ SummonTab:CreateToggle("Enable Auto Summon", Config.AutoSummon, function(v)
     SaveConfig()
 end)
 
-local summonBosses = {"SaberBoss", "QinShiBoss", "IchigoBoss", "GilgameshBoss", "BlessedMaidenBoss", "SaberAlterBoss", "MoonSlayerBoss", "IceQueenBoss", "GreatMage", "TrueAizen", "StrongestToday", "StrongestHistory", "Atomic"}
 SummonTab:CreateDropdown("Select Boss", summonBosses, Config.SelectedSummonBoss or "SaberBoss", false, function(v)
     Config.SelectedSummonBoss = v
     SaveConfig()
@@ -1176,6 +1238,8 @@ end)
 
 -- Changelog Tab
 ChangelogTab:CreateLabel("--- Latest Updates ---")
+ChangelogTab:CreateLabel("[v1.8.3] 7:45 PM - REFINED Auto Pity Farm (Fixed SaberBoss builder + All Bosses support)")
+ChangelogTab:CreateLabel("[v1.8.2] 4:42 PM - ADDED Live Presence System (Join/Leave Tracking)")
 ChangelogTab:CreateLabel("[v1.8.1] 1:30 PM - SIMPLIFIED Community (Buttons only)")
 ChangelogTab:CreateLabel("[v1.8.0] 1:28 PM - FIXED Discord Widget (Native Component)")
 ChangelogTab:CreateLabel("[v1.7.9] 1:26 PM - ADDED Custom Discord Widgets (Premium UI)")
@@ -1335,7 +1399,25 @@ local function GetTarget()
     end
 
     local mobsToSearch = nil
-    if Config.AutoSummon then
+    if Config.AutoPityFarm then
+        local pityObj = player.PlayerGui:FindFirstChild("BossUI") 
+            and player.PlayerGui.BossUI:FindFirstChild("MainFrame")
+            and player.PlayerGui.BossUI.MainFrame:FindFirstChild("BossHPBar")
+            and player.PlayerGui.BossUI.MainFrame.BossHPBar:FindFirstChild("Pity")
+        
+        if pityObj then
+            local pityText = pityObj.Text or pityObj.ContentText or ""
+            local cur, max = pityText:match("(%d+)/(%d+)")
+            cur, max = tonumber(cur), tonumber(max)
+            if cur and max and cur >= 24 then -- Adjusted to 24 as requested
+                mobsToSearch = {Config.MainBoss}
+            else
+                mobsToSearch = {"SaberBoss"}
+            end
+        else
+            mobsToSearch = {"SaberBoss"}
+        end
+    elseif Config.AutoSummon then
         mobsToSearch = {Config.SelectedSummonBoss, "Saber", "QinShi", "Ichigo", "Gilgamesh", "Maiden", "Alter", "Moon", "Queen", "Strongest", "Atomic", "AtomicBoss", "GreatMage", "TrueAizen"}
     elseif Config.AutoKillDungeon then
         mobsToSearch = nil
@@ -1352,7 +1434,7 @@ local function GetTarget()
         mobsToSearch = {Config.SelectedMob}
     end
 
-    if Config.AutoKillDungeon or Config.AutoFarmQuest or Config.AutoFarm or Config.AutoBossFarm or Config.SelectedBoss ~= "None" or Config.AutoSummon or Config.AutoInfiniteTower then
+    if Config.AutoKillDungeon or Config.AutoFarmQuest or Config.AutoFarm or Config.AutoBossFarm or Config.SelectedBoss ~= "None" or Config.AutoSummon or Config.AutoInfiniteTower or Config.AutoPityFarm then
         -- Search in NPCs folder if it exists
         if npcs then
             for _, v in ipairs(npcs:GetChildren()) do
@@ -1543,9 +1625,40 @@ task.spawn(function()
     end
 end)
 
-local BuildDate = "April 25, 2026 - 1:30 PM"
-print("Sailor Hub Loaded | Version: v1.8.1 | Build: " .. BuildDate)
-Window:Notify("Sailor Hub Loaded", "Version: v1.8.1\nBuild: " .. BuildDate)
+local BuildDate = "April 25, 2026 - 7:47 PM"
+print("Sailor Hub Loaded | Version: v1.8.3 | Build: " .. BuildDate)
+Window:Notify("Sailor Hub Loaded", "Version: v1.8.3\nBuild: " .. BuildDate)
+
+-- Live Presence System (VK Workers)
+local workerURL = "https://TU_WORKER_LINK_AQUI.workers.dev/" -- CAMBIA ESTO POR TU URL REAL
+
+local function SendPresence(action)
+    pcall(function()
+        local data = {
+            ["action"] = action,
+            ["player"] = player.Name,
+            ["displayName"] = player.DisplayName,
+            ["userId"] = player.UserId,
+            ["jobId"] = game.JobId,
+            ["version"] = "v1.8.3"
+        }
+        local json = HttpService:JSONEncode(data)
+        HttpService:PostAsync(workerURL, json)
+    end)
+end
+
+-- Send Join Signal
+task.spawn(function()
+    SendPresence("join")
+end)
+
+-- Send Leave Signal
+game:GetService("Players").PlayerRemoving:Connect(function(p)
+    if p == player then
+        SendPresence("leave")
+    end
+end)
+
 
 -- Initial call (Optimized for Free Tier: Only 1 ping per session)
 task.spawn(function()
@@ -1659,7 +1772,7 @@ end)
 task.spawn(function()
     while task.wait(3) do
         if getgenv().SailorHub_Cancel then break end
-        if Config.AutoSummon then
+        if Config.AutoSummon and not Config.AutoPityFarm then
             local bName = Config.SelectedSummonBoss
             local diff = Config.SelectedDifficulty
             
@@ -1772,6 +1885,82 @@ task.spawn(function()
             pcall(function()
                 game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("DungeonWaveVote"):FireServer("start")
             end)
+        end
+    end
+end)
+
+-- Auto Pity Farm Loop
+task.spawn(function()
+    while task.wait(3) do
+        if getgenv().SailorHub_Cancel then break end
+        if Config.AutoPityFarm then
+            local isPityFull = false
+            pcall(function()
+                local pityObj = player.PlayerGui.BossUI.MainFrame.BossHPBar.Pity
+                local pt = pityObj.Text or pityObj.ContentText or ""
+                local cur, max = pt:match("(%d+)/(%d+)")
+                if cur and max and tonumber(cur) >= 24 then -- Adjusted to 24 as requested
+                    isPityFull = true
+                end
+            end)
+            
+            local targetBossName = isPityFull and Config.MainBoss or "SaberBoss"
+            
+            if targetBossName ~= "None" and targetBossName ~= "" then
+                local bIsland = "Sailor" -- Default
+                if targetBossName == "SaberBoss" then 
+                    bIsland = "Boss" 
+                else
+                    -- Buscar en BossData
+                    for _, b in ipairs(BossData) do
+                        if b.Name == targetBossName then
+                            bIsland = b.Island
+                            break
+                        end
+                    end
+                    -- Overrides para Summon Bosses
+                    if targetBossName == "GreatMage" then bIsland = "Easter"
+                    elseif targetBossName == "TrueAizen" then bIsland = "SoulDominion"
+                    elseif targetBossName == "StrongestToday" or targetBossName == "StrongestHistory" then bIsland = "Shinjuku"
+                    elseif targetBossName == "Atomic" then bIsland = "Lawless"
+                    elseif table.find(summonBosses, targetBossName) and targetBossName ~= "SaberBoss" then
+                        bIsland = "Sailor" -- La mayoría de los otros summon bosses están en Sailor
+                    end
+                end
+                
+                local bossObj = workspace.NPCs:FindFirstChild(targetBossName)
+                if not bossObj or (bossObj:FindFirstChild("Humanoid") and bossObj.Humanoid.Health <= 0) then
+                    if getgenv().CurrentIsland ~= bIsland then
+                        TeleportToIsland(bIsland)
+                        task.wait(3)
+                    end
+                    
+                    -- Summon logic
+                    pcall(function()
+                        if targetBossName == "GreatMage" then
+                            game:GetService("ReplicatedStorage"):WaitForChild("RemoteEvents"):WaitForChild("RequestSpawnGreatMage"):FireServer(Config.SelectedDifficulty or "Normal")
+                        elseif targetBossName == "TrueAizen" then
+                            game:GetService("ReplicatedStorage"):WaitForChild("RemoteEvents"):WaitForChild("RequestSpawnTrueAizen"):FireServer(Config.SelectedDifficulty or "Normal")
+                        elseif targetBossName == "Atomic" then
+                            game:GetService("ReplicatedStorage"):WaitForChild("RemoteEvents"):WaitForChild("RequestSpawnAtomic"):FireServer(Config.SelectedDifficulty or "Normal")
+                        elseif targetBossName == "StrongestToday" or targetBossName == "StrongestHistory" then
+                            game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("RequestSpawnStrongestBoss"):FireServer(targetBossName, Config.SelectedDifficulty or "Normal")
+                        else
+                            local remote = game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("RequestSummonBoss")
+                            if targetBossName == "SaberBoss" or targetBossName == "QinShiBoss" or targetBossName == "IchigoBoss" then
+                                remote:FireServer(targetBossName)
+                            else
+                                remote:FireServer(targetBossName, Config.SelectedDifficulty or "Normal")
+                            end
+                        end
+                    end)
+                else
+                    -- Forzar posición "Above" si es Pity Farm para SaberBoss
+                    if targetBossName == "SaberBoss" then
+                        Config.AttackPosition = "Above"
+                    end
+                end
+            end
         end
     end
 end)
