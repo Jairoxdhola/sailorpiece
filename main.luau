@@ -54,8 +54,8 @@ Library.Colors = {
     TogOff = Color3.fromRGB(45,45,65), TogOn = Color3.fromRGB(100,80,255),
 }
 local C = Library.Colors
-Library.Version = "v1.8.6"
-Library.LastUpdated = "April 26, 2026 - 10:53 AM"
+Library.Version = "v1.8.8"
+Library.LastUpdated = "April 26, 2026 - 01:27 PM"
 
 getgenv().Config = {
     SelectedWeapon = "None",
@@ -78,6 +78,7 @@ getgenv().Config = {
     AutoAcceptQuest = false,
     AutoFarm = false,
     AutoFarmQuest = false,
+    AutoFarmAllNPCs = false,
     SelectedMob = "None",
     AttackDistance = 5,
     AttackPosition = "Above",
@@ -908,6 +909,11 @@ FarmTab:CreateDropdown("Select Quest NPC", questNPCs, Config.SelectedQuestNPC or
     end)
 end)
 
+FarmTab:CreateToggle("Auto Farm ALL NPCs", Config.AutoFarmAllNPCs, function(v)
+    Config.AutoFarmAllNPCs = v
+    SaveConfig()
+end)
+
 FarmTab:CreateToggle("Auto Farm Selected Quest", Config.AutoFarmQuest, function(v)
     Config.AutoFarmQuest = v
     SaveConfig()
@@ -1253,9 +1259,10 @@ end)
 
 -- Changelog Tab
 ChangelogTab:CreateLabel("--- Latest Updates ---")
-ChangelogTab:CreateLabel("[" .. Library.Version .. "] " .. Library.LastUpdated .. " - ADDED AlucardBoss to Auto Boss & Pity Farm")
-ChangelogTab:CreateLabel("[" .. Library.Version .. "] " .. Library.LastUpdated .. " - FIXED Boss Teleportation logic (Strongest/Aizen)")
-ChangelogTab:CreateLabel("[" .. Library.Version .. "] " .. Library.LastUpdated .. " - FIXED Movement lock bug when waiting for boss")
+ChangelogTab:CreateLabel("[" .. Library.Version .. "] " .. Library.LastUpdated .. " - FIXED IceQueenBoss spawning in Boss island (not Snow)")
+ChangelogTab:CreateLabel("[v1.8.7] April 26 - 01:23 PM - ADDED 'Auto Farm ALL NPCs' feature")
+ChangelogTab:CreateLabel("[v1.8.6] April 26 - 10:53 AM - ADDED AlucardBoss to Auto Boss & Pity Farm")
+ChangelogTab:CreateLabel("[v1.8.6] April 26 - 10:53 AM - FIXED Boss Teleportation logic (Strongest/Aizen)")
 ChangelogTab:CreateLabel("[v1.8.3] April 25 - 7:45 PM - REFINED Auto Pity Farm (Fixed SaberBoss builder + All Bosses support)")
 ChangelogTab:CreateLabel("[v1.8.2] 4:42 PM - ADDED Live Presence System (Join/Leave Tracking)")
 ChangelogTab:CreateLabel("[v1.8.1] 1:30 PM - SIMPLIFIED Community (Buttons only)")
@@ -1450,6 +1457,8 @@ local function GetTarget()
         end
     elseif Config.AutoSummon then
         mobsToSearch = {Config.SelectedSummonBoss, "Saber", "QinShi", "Ichigo", "Gilgamesh", "Maiden", "Alter", "Moon", "Queen", "Strongest", "Atomic", "AtomicBoss", "GreatMage", "TrueAizen"}
+    elseif Config.AutoFarmAllNPCs then
+        mobsToSearch = nil
     elseif Config.AutoKillDungeon then
         mobsToSearch = nil
     elseif Config.AutoFarmQuest then
@@ -1465,7 +1474,7 @@ local function GetTarget()
         mobsToSearch = {Config.SelectedMob}
     end
 
-    if Config.AutoKillDungeon or Config.AutoFarmQuest or Config.AutoFarm or Config.AutoBossFarm or Config.SelectedBoss ~= "None" or Config.AutoSummon or Config.AutoInfiniteTower or Config.AutoPityFarm then
+    if Config.AutoKillDungeon or Config.AutoFarmAllNPCs or Config.AutoFarmQuest or Config.AutoFarm or Config.AutoBossFarm or Config.SelectedBoss ~= "None" or Config.AutoSummon or Config.AutoInfiniteTower or Config.AutoPityFarm then
         -- Search in NPCs folder if it exists
         if npcs then
             for _, v in ipairs(npcs:GetChildren()) do
@@ -1843,7 +1852,8 @@ task.spawn(function()
                 if bName == "GreatMage" then targetIsland = "Easter"
                 elseif bName == "TrueAizen" then targetIsland = "SoulDominion"
                 elseif bName == "StrongestToday" or bName == "StrongestHistory" then targetIsland = "Shinjuku"
-                elseif bName == "Atomic" then targetIsland = "Lawless" end
+                elseif bName == "Atomic" then targetIsland = "Lawless"
+                elseif bName == "IceQueenBoss" then targetIsland = "Boss" end
                 
                 if (getgenv() :: any).CurrentIsland ~= targetIsland then
                     TeleportToIsland(targetIsland)
@@ -1956,6 +1966,7 @@ task.spawn(function()
                     elseif targetBossName == "TrueAizen" then bIsland = "SoulDominion"
                     elseif targetBossName == "StrongestToday" or targetBossName == "StrongestHistory" then bIsland = "Shinjuku"
                     elseif targetBossName == "Atomic" then bIsland = "Lawless"
+                    elseif targetBossName == "IceQueenBoss" then bIsland = "Boss"
                     elseif table.find(summonBosses, targetBossName) and targetBossName ~= "SaberBoss" then
                         bIsland = "Sailor" -- La mayoría de los otros summon bosses están en Sailor
                     end
