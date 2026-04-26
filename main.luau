@@ -54,7 +54,7 @@ Library.Colors = {
     TogOff = Color3.fromRGB(45,45,65), TogOn = Color3.fromRGB(100,80,255),
 }
 local C = Library.Colors
-Library.Version = "v1.8.3"
+Library.Version = "v1.8.5"
 
 getgenv().Config = {
     SelectedWeapon = "None",
@@ -850,12 +850,22 @@ MainTab:CreateButton("Redeem All Codes", function()
         "500KFAVORITES", "900MVISITSTYSMM", "900KLIKESTYYY", "LASTRESTARTHOPEFULLY", 
         "YETANOTHERFREECODE", "BUGFIXESCODES", "YETANOTHERFREECODE2", "THEOTHERFREECODEMB"
     }
-    local remote = GetRemote("RemoteEvents", "CodeRedeem")
+    local possibleNames = {"CodeRedeem", "RedeemCode", "Redeem", "Code", "PromoCode", "Codes"}
+    local remote = nil
+    for _, name in ipairs(possibleNames) do
+        remote = GetRemote("RemoteEvents", name)
+        if remote then break end
+    end
+    
     if remote then
         for _, code in ipairs(codes) do
             task.spawn(function()
                 pcall(function()
-                    remote:InvokeServer(code)
+                    if remote:IsA("RemoteEvent") then
+                        remote:FireServer(code)
+                    elseif remote:IsA("RemoteFunction") then
+                        remote:InvokeServer(code)
+                    end
                 end)
             end)
             task.wait(0.1)
@@ -1241,6 +1251,8 @@ end)
 
 -- Changelog Tab
 ChangelogTab:CreateLabel("--- Latest Updates ---")
+ChangelogTab:CreateLabel("[v1.8.5] JUST NOW - FIXED Boss Teleportation (Case/Name mismatch for Strongest/Aizen)")
+ChangelogTab:CreateLabel("[v1.8.4] JUST NOW - FIXED Movement lock bug when waiting for boss/mobs")
 ChangelogTab:CreateLabel("[v1.8.3] 7:45 PM - REFINED Auto Pity Farm (Fixed SaberBoss builder + All Bosses support)")
 ChangelogTab:CreateLabel("[v1.8.2] 4:42 PM - ADDED Live Presence System (Join/Leave Tracking)")
 ChangelogTab:CreateLabel("[v1.8.1] 1:30 PM - SIMPLIFIED Community (Buttons only)")
@@ -1379,13 +1391,13 @@ _G.currentTarget = nil
 -- ===== FUNCTIONS =====
 
 local function GetRealBossName(bName)
-    if bName == "GreatMage" then return "GreatMageBoss"
-    elseif bName == "TrueAizen" then return "TrueAizenBoss"
-    elseif bName == "StrongestToday" then return "StrongestofTodayBoss"
-    elseif bName == "StrongestHistory" then return "StrongestinHistoryBoss"
-    elseif bName == "Atomic" then return "AtomicBoss"
+    if bName == "GreatMage" then return "GreatMage"
+    elseif bName == "TrueAizen" then return "TrueAizen"
+    elseif bName == "StrongestToday" then return "Strongest"
+    elseif bName == "StrongestHistory" then return "Strongest"
+    elseif bName == "Atomic" then return "Atomic"
     end
-    return bName
+    return bName:gsub("Boss$", "")
 end
 
 local function GetTarget()
@@ -1506,16 +1518,11 @@ end);
 (getgenv() :: any).SailorHub_Connection = game:GetService("RunService").Heartbeat:Connect(function()
     local char = player.Character
     if char and char:FindFirstChild("HumanoidRootPart") then
-        local anyFarm = Config.AutoFarm or Config.AutoFarmQuest or Config.AutoBossFarm or Config.AutoKillDungeon or Config.AutoSummon or Config.AutoInfiniteTower or (Config.SelectedBoss ~= "None")
-        
         if _G.currentTarget then
             pcall(function()
                 char.HumanoidRootPart.Velocity = Vector3.new(0,0,0)
                 char.HumanoidRootPart.CFrame = GetAttackCFrame(_G.currentTarget)
             end)
-        elseif anyFarm then
-            -- Stabilizer: Only stop shaking if a farm is actually enabled
-            char.HumanoidRootPart.Velocity = Vector3.new(0,0,0)
         end
     end
 end)
@@ -1866,7 +1873,7 @@ task.spawn(function()
                     -- Si no lo encontró por nombre exacto, buscarlo de nuevo
                     if not bossObj then
                         for _, v in ipairs(workspace.NPCs:GetChildren()) do
-                            if v.Name:find(checkName) then 
+                            if v.Name:lower():find(checkName:lower()) then 
                                 bossObj = v 
                                 break 
                             end
@@ -1955,7 +1962,7 @@ task.spawn(function()
                 local bossObj = workspace.NPCs:FindFirstChild(realBossName)
                 if not bossObj then
                     for _, v in ipairs(workspace.NPCs:GetChildren()) do
-                        if v.Name:find(realBossName) and v:FindFirstChild("Humanoid") and v.Humanoid.Health > 0 then
+                        if v.Name:lower():find(realBossName:lower()) and v:FindFirstChild("Humanoid") and v.Humanoid.Health > 0 then
                             bossObj = v
                             break
                         end
