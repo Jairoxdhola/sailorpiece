@@ -54,7 +54,7 @@ Library.Colors = {
     TogOff = Color3.fromRGB(45,45,65), TogOn = Color3.fromRGB(100,80,255),
 }
 local C = Library.Colors
-Library.Version = "v1.8.5"
+Library.Version = "v1.8.6"
 
 getgenv().Config = {
     SelectedWeapon = "None",
@@ -740,7 +740,8 @@ local BossData = {
     {Name = "SukunaBoss", Island = "Shibuya"},
     {Name = "AizenBoss", Island = "HollowIsland"},
     {Name = "YamatoBoss", Island = "Judgement"},
-    {Name = "StrongestShinobiBoss", Island = "Ninja"}
+    {Name = "StrongestShinobiBoss", Island = "Ninja"},
+    {Name = "AlucardBoss", Island = "World"}
 }
 
 local summonBosses = {"SaberBoss", "QinShiBoss", "IchigoBoss", "GilgameshBoss", "BlessedMaidenBoss", "SaberAlterBoss", "MoonSlayerBoss", "IceQueenBoss", "GreatMage", "TrueAizen", "StrongestToday", "StrongestHistory", "Atomic"}
@@ -1251,8 +1252,9 @@ end)
 
 -- Changelog Tab
 ChangelogTab:CreateLabel("--- Latest Updates ---")
-ChangelogTab:CreateLabel("[v1.8.5] JUST NOW - FIXED Boss Teleportation (Case/Name mismatch for Strongest/Aizen)")
-ChangelogTab:CreateLabel("[v1.8.4] JUST NOW - FIXED Movement lock bug when waiting for boss/mobs")
+ChangelogTab:CreateLabel("[v1.8.6] JUST NOW - ADDED AlucardBoss to Auto Boss & Pity Farm")
+ChangelogTab:CreateLabel("[v1.8.6] JUST NOW - FIXED Boss Teleportation logic (Strongest/Aizen)")
+ChangelogTab:CreateLabel("[v1.8.6] JUST NOW - FIXED Movement lock bug when waiting for boss")
 ChangelogTab:CreateLabel("[v1.8.3] 7:45 PM - REFINED Auto Pity Farm (Fixed SaberBoss builder + All Bosses support)")
 ChangelogTab:CreateLabel("[v1.8.2] 4:42 PM - ADDED Live Presence System (Join/Leave Tracking)")
 ChangelogTab:CreateLabel("[v1.8.1] 1:30 PM - SIMPLIFIED Community (Buttons only)")
@@ -1454,7 +1456,7 @@ local function GetTarget()
         local qd = QuestsData[Config.SelectedQuestNPC]
         if qd then mobsToSearch = qd.Mobs end
     elseif Config.AutoBossFarm or Config.SelectedBoss ~= "None" then
-        mobsToSearch = {"Boss", "MiniBoss", "Sukuna", "Gojo", "Aizen", "Law", "Katakuri", "Jinwoo", "Yuji", "Yamato", "Shinobi"}
+        mobsToSearch = {"Boss", "MiniBoss", "Sukuna", "Gojo", "Aizen", "Law", "Katakuri", "Jinwoo", "Yuji", "Yamato", "Shinobi", "Alucard"}
         if Config.SelectedBoss ~= "None" then
             mobsToSearch = {Config.SelectedBoss}
         end
@@ -1647,9 +1649,9 @@ task.spawn(function()
     end
 end)
 
-local BuildDate = "April 25, 2026 - 7:47 PM"
-print("Sailor Hub Loaded | Version: v1.8.3 | Build: " .. BuildDate)
-Window:Notify("Sailor Hub Loaded", "Version: v1.8.3\nBuild: " .. BuildDate)
+local BuildDate = os.date("%B %d, %Y - %I:%M %p")
+print("Sailor Hub Loaded | Version: " .. Library.Version .. " | Build: " .. BuildDate)
+Window:Notify("Sailor Hub Loaded", "Version: " .. Library.Version .. "\nBuild: " .. BuildDate)
 
 -- Live Presence System (VK Workers)
 local workerURL = "https://TU_WORKER_LINK_AQUI.workers.dev/" -- CAMBIA ESTO POR TU URL REAL
@@ -1662,7 +1664,7 @@ local function SendPresence(action)
             ["displayName"] = player.DisplayName,
             ["userId"] = player.UserId,
             ["jobId"] = game.JobId,
-            ["version"] = "v1.8.3"
+            ["version"] = Library.Version
         }
         local json = HttpService:JSONEncode(data)
         HttpService:PostAsync(workerURL, json)
