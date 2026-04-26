@@ -54,8 +54,8 @@ Library.Colors = {
     TogOff = Color3.fromRGB(45,45,65), TogOn = Color3.fromRGB(100,80,255),
 }
 local C = Library.Colors
-Library.Version = "v1.8.8"
-Library.LastUpdated = "April 26, 2026 - 01:27 PM"
+Library.Version = "v1.8.10"
+Library.LastUpdated = "April 26, 2026 - 01:41 PM"
 
 getgenv().Config = {
     SelectedWeapon = "None",
@@ -92,7 +92,10 @@ getgenv().Config = {
     ChestAmount = 1,
     PityBoss = "None",
     MainBoss = "None",
-    AutoPityFarm = false
+    AutoPityFarm = false,
+    MerchantItem = "Dungeon Key",
+    MerchantAmount = 1,
+    AutoBuyMerchant = false
 }
 local Config = getgenv().Config
 
@@ -764,6 +767,7 @@ local StatsTab = Window:CreateTab("Stats")
 local SummonTab = Window:CreateTab("Summon Boss")
 local ChestTab = Window:CreateTab("Chest Opener")
 local PityTab = Window:CreateTab("Auto Boss + Pity")
+local MerchantTab = Window:CreateTab("Merchant")
 local ReportTab = Window:CreateTab("Bug Report")
 local ChangelogTab = Window:CreateTab("Changelog")
 
@@ -1257,9 +1261,54 @@ ChestTab:CreateButton("Open Manually", function()
     Window:Notify("Chests", "Opening " .. Config.ChestAmount .. "x " .. Config.SelectedChest)
 end)
 
+-- Merchant Tab
+MerchantTab:CreateLabel("--- Auto Buy Merchant ---")
+local merchantItems = {"All", "Dungeon Key", "Boss Key", "Haki Color Reroll", "Race Reroll", "Rush Key", "Passive Shard", "Trait Reroll", "Clan Reroll"}
+
+MerchantTab:CreateDropdown("Select Item", merchantItems, Config.MerchantItem or "Dungeon Key", false, function(v)
+    Config.MerchantItem = v
+    SaveConfig()
+end)
+
+MerchantTab:CreateTextBox("Amount to Buy", tostring(Config.MerchantAmount or 1), function(v)
+    Config.MerchantAmount = tonumber(v) or 1
+    SaveConfig()
+end)
+
+MerchantTab:CreateToggle("Auto Buy Item(s)", Config.AutoBuyMerchant or false, function(v)
+    Config.AutoBuyMerchant = v
+    SaveConfig()
+    
+    if v then
+        task.spawn(function()
+            while Config.AutoBuyMerchant do
+                if (getgenv() :: any).SailorHub_Cancel then break end
+                pcall(function()
+                    local remote = game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("MerchantRemotes"):WaitForChild("PurchaseMerchantItem")
+                    
+                    if Config.MerchantItem == "All" then
+                        for i = 2, #merchantItems do
+                            task.spawn(function()
+                                pcall(function() remote:InvokeServer(merchantItems[i], Config.MerchantAmount) end)
+                            end)
+                        end
+                    else
+                        task.spawn(function()
+                            pcall(function() remote:InvokeServer(Config.MerchantItem, Config.MerchantAmount) end)
+                        end)
+                    end
+                end)
+                task.wait(0.1)
+            end
+        end)
+    end
+end)
+
 -- Changelog Tab
 ChangelogTab:CreateLabel("--- Latest Updates ---")
-ChangelogTab:CreateLabel("[" .. Library.Version .. "] " .. Library.LastUpdated .. " - FIXED IceQueenBoss spawning in Boss island (not Snow)")
+ChangelogTab:CreateLabel("[" .. Library.Version .. "] " .. Library.LastUpdated .. " - OPTIMIZED Merchant Auto Buy (Faster + Async All)")
+ChangelogTab:CreateLabel("[v1.8.9] April 26 - 01:38 PM - ADDED 'Merchant' Tab (Auto Buy Materials)")
+ChangelogTab:CreateLabel("[v1.8.8] April 26 - 01:27 PM - FIXED IceQueenBoss spawning in Boss island (not Snow)")
 ChangelogTab:CreateLabel("[v1.8.7] April 26 - 01:23 PM - ADDED 'Auto Farm ALL NPCs' feature")
 ChangelogTab:CreateLabel("[v1.8.6] April 26 - 10:53 AM - ADDED AlucardBoss to Auto Boss & Pity Farm")
 ChangelogTab:CreateLabel("[v1.8.6] April 26 - 10:53 AM - FIXED Boss Teleportation logic (Strongest/Aizen)")
