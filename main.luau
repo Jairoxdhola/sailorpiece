@@ -56,8 +56,8 @@ Library.Colors = {
     Warning = Color3.fromRGB(255,193,7), Error = Color3.fromRGB(255,71,87)
 }
 local C = Library.Colors
-Library.Version = "v1.8.11"
-Library.LastUpdated = "April 26, 2026 - 09:20 PM"
+Library.Version = "v1.8.12"
+Library.LastUpdated = "April 26, 2026 - 09:33 PM"
 
 getgenv().Config = {
     SelectedWeapon = "None",
@@ -370,8 +370,16 @@ function Library:CreateWindow(title, toggleKey)
         startPulse()
     end)
     
+    -- Draggable variables
+    local isHolding = false
+    local bDrag = false
+    local bDS, bSP, startPos
+    local dragThreshold = 10 -- Pixels before considering it a drag
+
     -- Click effect
     toggleBtn.MouseButton1Click:Connect(function()
+        if bDrag then return end
+        
         -- Toggle menu first (immediate response)
         main.Visible = not main.Visible
         
@@ -400,28 +408,29 @@ function Library:CreateWindow(title, toggleKey)
     startPulse()
 
     -- Draggable Logic for Toggle Button (Fixed)
-    local bDrag, bDS, bSP, startPos
-    local dragThreshold = 10 -- Pixels before considering it a drag
-    
     toggleBtn.InputBegan:Connect(function(i)
         if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then
+            isHolding = true
             bDrag = false
             bDS = i.Position
             bSP = toggleBtn.Position
             startPos = i.Position
             
-            i.Changed:Connect(function() 
+            local connection
+            connection = i.Changed:Connect(function() 
                 if i.UserInputState == Enum.UserInputState.End then 
-                    bDrag = false 
+                    isHolding = false
+                    if connection then connection:Disconnect() end
+                    task.delay(0.1, function() bDrag = false end)
                 end 
             end)
         end
     end)
     
     UIS.InputChanged:Connect(function(i)
-        if i.UserInputType == Enum.UserInputType.MouseMovement or i.UserInputType == Enum.UserInputType.Touch then
+        if isHolding and (i.UserInputType == Enum.UserInputType.MouseMovement or i.UserInputType == Enum.UserInputType.Touch) then
             local distance = (i.Position - startPos).Magnitude
-            if distance > dragThreshold and not bDrag then
+            if distance > dragThreshold then
                 bDrag = true
             end
             
@@ -430,10 +439,6 @@ function Library:CreateWindow(title, toggleKey)
                 toggleBtn.Position = UDim2.new(bSP.X.Scale, bSP.X.Offset+d.X, bSP.Y.Scale, bSP.Y.Offset+d.Y)
             end
         end
-    end)
-
-    toggleBtn.MouseButton1Click:Connect(function()
-        main.Visible = not main.Visible
     end)
 
     -- Sidebar (Now Scrolling for many tabs)
@@ -1577,7 +1582,8 @@ end)
 
 -- Changelog Tab
 ChangelogTab:CreateLabel("--- Latest Updates ---")
-ChangelogTab:CreateLabel("[" .. Library.Version .. "] " .. Library.LastUpdated .. " - ADDED FinalAizen to boss farm & FIXED Buy All (Uno por uno)")
+ChangelogTab:CreateLabel("[" .. Library.Version .. "] " .. Library.LastUpdated .. " - FIXED Mobile Toggle Button (Drag & Double Click Bug)")
+ChangelogTab:CreateLabel("[v1.8.11] April 26 - 09:20 PM - ADDED FinalAizen to boss farm & FIXED Buy All (Uno por uno)")
 ChangelogTab:CreateLabel("[v1.8.10] April 26 - 01:41 PM - OPTIMIZED Merchant Auto Buy (Faster + Async All)")
 ChangelogTab:CreateLabel("[v1.8.9] April 26 - 01:38 PM - ADDED 'Merchant' Tab (Auto Buy Materials)")
 ChangelogTab:CreateLabel("[v1.8.8] April 26 - 01:27 PM - FIXED IceQueenBoss spawning in Boss island (not Snow)")
