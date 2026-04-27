@@ -47,15 +47,17 @@ end
 
 local Library = {}
 Library.Colors = {
-    BG = Color3.fromRGB(18,18,28), Sidebar = Color3.fromRGB(22,22,35),
-    Content = Color3.fromRGB(28,28,42), TopBar = Color3.fromRGB(25,25,38),
-    Accent = Color3.fromRGB(110,90,255), Text = Color3.fromRGB(225,225,235),
-    Sub = Color3.fromRGB(140,140,165), Elem = Color3.fromRGB(35,35,52),
-    TogOff = Color3.fromRGB(45,45,65), TogOn = Color3.fromRGB(100,80,255),
+    BG = Color3.fromRGB(15,15,25), Sidebar = Color3.fromRGB(20,20,32),
+    Content = Color3.fromRGB(25,25,38), TopBar = Color3.fromRGB(22,22,35),
+    Accent = Color3.fromRGB(138,43,226), Accent2 = Color3.fromRGB(75,0,130), Text = Color3.fromRGB(245,245,255),
+    Sub = Color3.fromRGB(160,160,185), Elem = Color3.fromRGB(32,32,48),
+    TogOff = Color3.fromRGB(52,52,72), TogOn = Color3.fromRGB(138,43,226),
+    Hover = Color3.fromRGB(48,48,68), Success = Color3.fromRGB(46,213,115),
+    Warning = Color3.fromRGB(255,193,7), Error = Color3.fromRGB(255,71,87)
 }
 local C = Library.Colors
-Library.Version = "v1.8.10"
-Library.LastUpdated = "April 26, 2026 - 01:41 PM"
+Library.Version = "v1.8.11"
+Library.LastUpdated = "April 26, 2026 - 09:20 PM"
 
 getgenv().Config = {
     SelectedWeapon = "None",
@@ -107,11 +109,20 @@ function Library:CreateWindow(title, toggleKey)
     gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     gui.Parent = game:GetService("CoreGui")
 
-    -- Improved Loading Screen (Configuration Loader)
+    -- Improved Loading Screen with Gradient
     local loader = Instance.new("Frame", gui)
     loader.Size = UDim2.new(1,0,1,0)
-    loader.BackgroundColor3 = Color3.fromRGB(10,10,15)
+    loader.BackgroundColor3 = Color3.fromRGB(8,8,15)
     loader.ZIndex = 10000
+    
+    -- Add gradient background
+    local gradient = Instance.new("UIGradient", loader)
+    gradient.Color = ColorSequence.new{
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(8,8,15)),
+        ColorSequenceKeypoint.new(0.5, Color3.fromRGB(20,10,30)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(8,8,15))
+    }
+    gradient.Rotation = 45
     
     local blur = Instance.new("BlurEffect", game:GetService("Lighting"))
     blur.Size = 20
@@ -123,11 +134,21 @@ function Library:CreateWindow(title, toggleKey)
 
     local ltitle = Instance.new("TextLabel", lcontent)
     ltitle.Size = UDim2.new(1,0,0,30)
-    ltitle.Text = "SAILOR HUB"
+    ltitle.Text = "⚓ SAILOR HUB ⚓"
     ltitle.TextColor3 = C.Accent
-    ltitle.TextSize = 24
+    ltitle.TextSize = 26
     ltitle.Font = Enum.Font.GothamBold
     ltitle.BackgroundTransparency = 1
+    -- Add glow effect
+    local titleGlow = Instance.new("TextLabel", lcontent)
+    titleGlow.Size = UDim2.new(1,0,0,30)
+    titleGlow.Text = "⚓ SAILOR HUB ⚓"
+    titleGlow.TextColor3 = C.Accent2
+    titleGlow.TextSize = 26
+    titleGlow.Font = Enum.Font.GothamBold
+    titleGlow.BackgroundTransparency = 1
+    titleGlow.Position = UDim2.new(0,1,0,1)
+    titleGlow.TextTransparency = 0.7
 
     local lstatus = Instance.new("TextLabel", lcontent)
     lstatus.Size = UDim2.new(1,0,0,20)
@@ -148,6 +169,14 @@ function Library:CreateWindow(title, toggleKey)
     lbar.Size = UDim2.new(0,0,1,0)
     lbar.BackgroundColor3 = C.Accent
     Instance.new("UICorner", lbar)
+    -- Add gradient to progress bar
+    local barGradient = Instance.new("UIGradient", lbar)
+    barGradient.Color = ColorSequence.new{
+        ColorSequenceKeypoint.new(0, C.Accent),
+        ColorSequenceKeypoint.new(0.5, C.Accent2),
+        ColorSequenceKeypoint.new(1, C.Accent)
+    }
+    barGradient.Rotation = 90
 
     -- Background Loading Logic
     task.spawn(function()
@@ -187,14 +216,31 @@ function Library:CreateWindow(title, toggleKey)
     main.BackgroundColor3 = C.BG
     main.BorderSizePixel = 0
     main.Visible = false
-    Instance.new("UICorner", main).CornerRadius = UDim.new(0,10)
+    Instance.new("UICorner", main).CornerRadius = UDim.new(0,12)
+    -- Add subtle shadow effect
+    local shadow = Instance.new("Frame", main)
+    shadow.Size = UDim2.new(1,6,1,6)
+    shadow.Position = UDim2.new(0,-3,0,-3)
+    shadow.BackgroundColor3 = Color3.fromRGB(0,0,0)
+    shadow.BackgroundTransparency = 0.9
+    shadow.BorderSizePixel = 0
+    shadow.ZIndex = main.ZIndex - 1
+    Instance.new("UICorner", shadow).CornerRadius = UDim.new(0,12)
 
-    -- TopBar
+    -- TopBar with gradient
     local top = Instance.new("Frame", main)
     top.Size = UDim2.new(1,0,0,40)
     top.BackgroundColor3 = C.TopBar
     top.BorderSizePixel = 0
-    Instance.new("UICorner", top).CornerRadius = UDim.new(0,10)
+    Instance.new("UICorner", top).CornerRadius = UDim.new(0,12)
+    -- Add gradient to top bar
+    local topGradient = Instance.new("UIGradient", top)
+    topGradient.Color = ColorSequence.new{
+        ColorSequenceKeypoint.new(0, C.TopBar),
+        ColorSequenceKeypoint.new(0.5, Color3.fromRGB(35,35,52)),
+        ColorSequenceKeypoint.new(1, C.TopBar)
+    }
+    topGradient.Rotation = 90
     local fix = Instance.new("Frame", top)
     fix.Size = UDim2.new(1,0,0,10)
     fix.Position = UDim2.new(0,0,1,-10)
@@ -250,37 +296,139 @@ function Library:CreateWindow(title, toggleKey)
         end
     end)
     
-    -- Floating Toggle Button (Mobile/PC Friendly)
+    -- Floating Toggle Button (Mobile/PC Friendly) - Enhanced
     toggleBtn = Instance.new("ImageButton", gui)
     toggleBtn.Visible = false
     toggleBtn.Name = "SailorToggle"
-    toggleBtn.Size = UDim2.new(0, 45, 0, 45)
-    toggleBtn.Position = UDim2.new(0, 10, 0.5, -22)
+    toggleBtn.Size = UDim2.new(0, 55, 0, 55)
+    toggleBtn.Position = UDim2.new(0, 10, 0.5, -27)
     toggleBtn.BackgroundColor3 = C.Accent
     toggleBtn.Image = "rbxassetid://6031070940" -- Compass/Global icon
     toggleBtn.ImageColor3 = C.Text
     toggleBtn.BorderSizePixel = 0
     toggleBtn.ZIndex = 1001
-    Instance.new("UICorner", toggleBtn).CornerRadius = UDim.new(0, 10)
+    Instance.new("UICorner", toggleBtn).CornerRadius = UDim.new(0, 15)
+    
+    -- Add gradient to toggle button
+    local toggleGradient = Instance.new("UIGradient", toggleBtn)
+    toggleGradient.Color = ColorSequence.new{
+        ColorSequenceKeypoint.new(0, C.Accent),
+        ColorSequenceKeypoint.new(0.5, C.Accent2),
+        ColorSequenceKeypoint.new(1, C.Accent)
+    }
+    toggleGradient.Rotation = 45
+    
+    -- Enhanced border with glow effect
     local btnStroke = Instance.new("UIStroke", toggleBtn)
-    btnStroke.Color = Color3.new(1,1,1)
-    btnStroke.Thickness = 1.5
-    btnStroke.Transparency = 0.7
+    btnStroke.Color = C.Accent2
+    btnStroke.Thickness = 2
+    btnStroke.Transparency = 0.3
+    
+    -- Add inner glow effect
+    local innerGlow = Instance.new("Frame", toggleBtn)
+    innerGlow.Size = UDim2.new(1, -4, 1, -4)
+    innerGlow.Position = UDim2.new(0, 2, 0, 2)
+    innerGlow.BackgroundColor3 = Color3.new(1,1,1)
+    innerGlow.BackgroundTransparency = 0.9
+    innerGlow.BorderSizePixel = 0
+    innerGlow.ZIndex = toggleBtn.ZIndex + 1
+    Instance.new("UICorner", innerGlow).CornerRadius = UDim.new(0, 13)
+    
+    -- Add pulsing animation
+    local pulseAnimation
+    local function startPulse()
+        pulseAnimation = TweenService:Create(toggleBtn, TweenInfo.new(1.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {
+            Size = UDim2.new(0, 58, 0, 58)
+        })
+        pulseAnimation:Play()
+    end
+    
+    -- Hover effects
+    toggleBtn.MouseEnter:Connect(function()
+        if pulseAnimation then pulseAnimation:Cancel() end
+        TweenService:Create(toggleBtn, TweenInfo.new(0.3), {
+            Size = UDim2.new(0, 60, 0, 60),
+            ImageColor3 = Color3.new(1,1,1)
+        }):Play()
+        TweenService:Create(btnStroke, TweenInfo.new(0.3), {
+            Color = Color3.new(1,1,1),
+            Thickness = 3,
+            Transparency = 0.2
+        }):Play()
+    end)
+    
+    toggleBtn.MouseLeave:Connect(function()
+        TweenService:Create(toggleBtn, TweenInfo.new(0.3), {
+            Size = UDim2.new(0, 55, 0, 55),
+            ImageColor3 = C.Text
+        }):Play()
+        TweenService:Create(btnStroke, TweenInfo.new(0.3), {
+            Color = C.Accent2,
+            Thickness = 2,
+            Transparency = 0.3
+        }):Play()
+        startPulse()
+    end)
+    
+    -- Click effect
+    toggleBtn.MouseButton1Click:Connect(function()
+        -- Toggle menu first (immediate response)
+        main.Visible = not main.Visible
+        
+        -- Create ripple effect after toggle
+        task.spawn(function()
+            local ripple = Instance.new("Frame", toggleBtn)
+            ripple.Size = UDim2.new(0, 0, 0, 0)
+            ripple.Position = UDim2.new(0.5, 0, 0.5, 0)
+            ripple.BackgroundColor3 = Color3.new(1,1,1)
+            ripple.BackgroundTransparency = 0.7
+            ripple.BorderSizePixel = 0
+            ripple.ZIndex = toggleBtn.ZIndex + 2
+            Instance.new("UICorner", ripple).CornerRadius = UDim.new(1, 0)
+            
+            TweenService:Create(ripple, TweenInfo.new(0.6), {
+                Size = UDim2.new(2, 0, 2, 0),
+                Position = UDim2.new(-0.5, 0, -0.5, 0),
+                BackgroundTransparency = 1
+            }):Play()
+            
+            game:GetService("Debris"):AddItem(ripple, 0.6)
+        end)
+    end)
+    
+    -- Start pulse animation on creation
+    startPulse()
 
-    -- Draggable Logic for Toggle Button
-    local bDrag, bDS, bSP
+    -- Draggable Logic for Toggle Button (Fixed)
+    local bDrag, bDS, bSP, startPos
+    local dragThreshold = 10 -- Pixels before considering it a drag
+    
     toggleBtn.InputBegan:Connect(function(i)
         if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then
-            bDrag = true
+            bDrag = false
             bDS = i.Position
             bSP = toggleBtn.Position
-            i.Changed:Connect(function() if i.UserInputState == Enum.UserInputState.End then bDrag = false end end)
+            startPos = i.Position
+            
+            i.Changed:Connect(function() 
+                if i.UserInputState == Enum.UserInputState.End then 
+                    bDrag = false 
+                end 
+            end)
         end
     end)
+    
     UIS.InputChanged:Connect(function(i)
-        if bDrag and (i.UserInputType == Enum.UserInputType.MouseMovement or i.UserInputType == Enum.UserInputType.Touch) then
-            local d = i.Position - bDS
-            toggleBtn.Position = UDim2.new(bSP.X.Scale, bSP.X.Offset+d.X, bSP.Y.Scale, bSP.Y.Offset+d.Y)
+        if i.UserInputType == Enum.UserInputType.MouseMovement or i.UserInputType == Enum.UserInputType.Touch then
+            local distance = (i.Position - startPos).Magnitude
+            if distance > dragThreshold and not bDrag then
+                bDrag = true
+            end
+            
+            if bDrag then
+                local d = i.Position - bDS
+                toggleBtn.Position = UDim2.new(bSP.X.Scale, bSP.X.Offset+d.X, bSP.Y.Scale, bSP.Y.Offset+d.Y)
+            end
         end
     end)
 
@@ -353,9 +501,19 @@ function Library:CreateWindow(title, toggleKey)
         btn.Text = name
         btn.TextColor3 = C.Sub
         btn.TextSize = 13
-        btn.Font = Enum.Font.GothamBold -- Semibold might not be in the environment's type info
+        btn.Font = Enum.Font.GothamBold
         btn.BorderSizePixel = 0
         Instance.new("UICorner", btn).CornerRadius = UDim.new(0,7)
+        
+        -- Add hover effects
+        btn.MouseEnter:Connect(function()
+            TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = C.Accent, TextColor3 = C.Text}):Play()
+        end)
+        btn.MouseLeave:Connect(function()
+            if not btn.BackgroundTransparency == 0.85 then
+                TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundTransparency = 1, TextColor3 = C.Sub}):Play()
+            end
+        end)
 
         btn.MouseButton1Click:Connect(function()
             for _,t in pairs(self.tabs) do
@@ -367,8 +525,8 @@ function Library:CreateWindow(title, toggleKey)
                 end
             end
             page.Visible = true
-            btn.BackgroundTransparency = 0.85
-            btn.TextColor3 = C.Text
+            TweenService:Create(btn, TweenInfo.new(0.3), {BackgroundTransparency = 0.85}):Play()
+            TweenService:Create(btn, TweenInfo.new(0.3), {TextColor3 = C.Text}):Play()
         end)
 
         local tab = {page = page, btn = btn}
@@ -397,6 +555,14 @@ function Library:CreateWindow(title, toggleKey)
             h.BackgroundColor3 = C.Elem
             h.BorderSizePixel = 0
             Instance.new("UICorner", h).CornerRadius = UDim.new(0,7)
+            
+            -- Add hover effect for toggle container
+            h.MouseEnter:Connect(function()
+                TweenService:Create(h, TweenInfo.new(0.2), {BackgroundColor3 = C.Hover}):Play()
+            end)
+            h.MouseLeave:Connect(function()
+                TweenService:Create(h, TweenInfo.new(0.2), {BackgroundColor3 = C.Elem}):Play()
+            end)
             local l = Instance.new("TextLabel", h)
             l.Size = UDim2.new(1,-65,1,0)
             l.Position = UDim2.new(0,10,0,0)
@@ -412,6 +578,14 @@ function Library:CreateWindow(title, toggleKey)
             tf.BackgroundColor3 = default and C.TogOn or C.TogOff
             tf.BorderSizePixel = 0
             Instance.new("UICorner", tf).CornerRadius = UDim.new(1,0)
+            
+            -- Add gradient to toggle
+            local togGradient = Instance.new("UIGradient", tf)
+            togGradient.Color = ColorSequence.new{
+                ColorSequenceKeypoint.new(0, default and C.TogOn or C.TogOff),
+                ColorSequenceKeypoint.new(1, default and C.Accent2 or C.TogOff)
+            }
+            togGradient.Rotation = 90
             local ci = Instance.new("Frame", tf)
             ci.Size = UDim2.new(0,16,0,16)
             ci.Position = default and UDim2.new(1,-18,0.5,-8) or UDim2.new(0,2,0.5,-8)
@@ -425,8 +599,17 @@ function Library:CreateWindow(title, toggleKey)
             b.Text = ""
             b.MouseButton1Click:Connect(function()
                 on = not on
-                TweenService:Create(tf, TweenInfo.new(0.15), {BackgroundColor3 = on and C.TogOn or C.TogOff}):Play()
-                TweenService:Create(ci, TweenInfo.new(0.15), {Position = on and UDim2.new(1,-18,0.5,-8) or UDim2.new(0,2,0.5,-8)}):Play()
+                local targetColor = on and C.TogOn or C.TogOff
+                local targetGradient = on and C.Accent2 or C.TogOff
+                TweenService:Create(tf, TweenInfo.new(0.2), {BackgroundColor3 = targetColor}):Play()
+                TweenService:Create(ci, TweenInfo.new(0.2), {Position = on and UDim2.new(1,-18,0.5,-8) or UDim2.new(0,2,0.5,-8)}):Play()
+                
+                -- Update gradient
+                togGradient.Color = ColorSequence.new{
+                    ColorSequenceKeypoint.new(0, targetColor),
+                    ColorSequenceKeypoint.new(1, targetGradient)
+                }
+                
                 if callback then callback(on) end
             end)
             return h
@@ -440,6 +623,14 @@ function Library:CreateWindow(title, toggleKey)
             h.ClipsDescendants = false
             h.ZIndex = 5
             Instance.new("UICorner", h).CornerRadius = UDim.new(0,7)
+            
+            -- Add hover effect for dropdown container
+            h.MouseEnter:Connect(function()
+                TweenService:Create(h, TweenInfo.new(0.2), {BackgroundColor3 = C.Hover}):Play()
+            end)
+            h.MouseLeave:Connect(function()
+                TweenService:Create(h, TweenInfo.new(0.2), {BackgroundColor3 = C.Elem}):Play()
+            end)
             local l = Instance.new("TextLabel", h)
             l.Size = UDim2.new(0.4,0,1,0)
             l.Position = UDim2.new(0,10,0,0)
@@ -462,6 +653,14 @@ function Library:CreateWindow(title, toggleKey)
             db.Text = multi and (#sel > 0 and table.concat(sel,", ") or "Select...") or tostring(sel)
             db.ZIndex = 5
             Instance.new("UICorner", db).CornerRadius = UDim.new(0,5)
+            
+            -- Add gradient to dropdown button
+            local dropGradient = Instance.new("UIGradient", db)
+            dropGradient.Color = ColorSequence.new{
+                ColorSequenceKeypoint.new(0, C.TogOff),
+                ColorSequenceKeypoint.new(1, C.Elem)
+            }
+            dropGradient.Rotation = 90
             local lf = Instance.new("ScrollingFrame", h)
             lf.Size = UDim2.new(0.55,0,0,math.min(#options*28,150))
             lf.Position = UDim2.new(0.42,0,1,3)
@@ -502,8 +701,24 @@ function Library:CreateWindow(title, toggleKey)
                             sel = o
                             db.Text = o
                             lf.Visible = false
+                            -- Reset button color when selection is made
+                            TweenService:Create(db, TweenInfo.new(0.2), {BackgroundColor3 = C.TogOff}):Play()
+                            dropGradient.Color = ColorSequence.new{
+                                ColorSequenceKeypoint.new(0, C.TogOff),
+                                ColorSequenceKeypoint.new(1, C.Elem)
+                            }
                         end
                         if callback then callback(multi and sel or sel) end
+                    end)
+                    
+                    -- Add hover effect for dropdown options
+                    ob.MouseEnter:Connect(function()
+                        TweenService:Create(ob, TweenInfo.new(0.1), {BackgroundColor3 = C.Hover, TextColor3 = C.Text}):Play()
+                    end)
+                    ob.MouseLeave:Connect(function()
+                        if not (multi and table.find(sel, o)) then
+                            TweenService:Create(ob, TweenInfo.new(0.1), {BackgroundColor3 = C.Elem, TextColor3 = C.Sub}):Play()
+                        end
                     end)
                 end
             end
@@ -515,6 +730,21 @@ function Library:CreateWindow(title, toggleKey)
                 tabObj:CloseAllDropdowns()
                 lf.Visible = not wasVisible
                 h.ZIndex = lf.Visible and 1000 or 5
+                
+                -- Animate dropdown button
+                if lf.Visible then
+                    TweenService:Create(db, TweenInfo.new(0.2), {BackgroundColor3 = C.Accent}):Play()
+                    dropGradient.Color = ColorSequence.new{
+                        ColorSequenceKeypoint.new(0, C.Accent),
+                        ColorSequenceKeypoint.new(1, C.Accent2)
+                    }
+                else
+                    TweenService:Create(db, TweenInfo.new(0.2), {BackgroundColor3 = C.TogOff}):Play()
+                    dropGradient.Color = ColorSequence.new{
+                        ColorSequenceKeypoint.new(0, C.TogOff),
+                        ColorSequenceKeypoint.new(1, C.Elem)
+                    }
+                end
             end)
             local dropObj = {refresh = function(_, newOpts)
                 options = newOpts
@@ -590,7 +820,37 @@ function Library:CreateWindow(title, toggleKey)
             b.TextSize = 13
             b.Font = Enum.Font.GothamBold
             Instance.new("UICorner", b).CornerRadius = UDim.new(0,7)
+            
+            -- Add gradient to button
+            local btnGradient = Instance.new("UIGradient", b)
+            btnGradient.Color = ColorSequence.new{
+                ColorSequenceKeypoint.new(0, C.Accent),
+                ColorSequenceKeypoint.new(0.5, C.Accent2),
+                ColorSequenceKeypoint.new(1, C.Accent)
+            }
+            btnGradient.Rotation = 90
+            
+            -- Hover effects
+            b.MouseEnter:Connect(function()
+                TweenService:Create(b, TweenInfo.new(0.2), {BackgroundColor3 = C.Accent2}):Play()
+                btnGradient.Color = ColorSequence.new{
+                    ColorSequenceKeypoint.new(0, C.Accent2),
+                    ColorSequenceKeypoint.new(1, C.Accent)
+                }
+            end)
+            b.MouseLeave:Connect(function()
+                btnGradient.Color = ColorSequence.new{
+                    ColorSequenceKeypoint.new(0, C.Accent),
+                    ColorSequenceKeypoint.new(0.5, C.Accent2),
+                    ColorSequenceKeypoint.new(1, C.Accent)
+                }
+            end)
+            
+            -- Click effect
             b.MouseButton1Click:Connect(function()
+                TweenService:Create(b, TweenInfo.new(0.1), {Size = UDim2.new(1,0,0,34)}):Play()
+                task.wait(0.1)
+                TweenService:Create(b, TweenInfo.new(0.1), {Size = UDim2.new(1,0,0,36)}):Play()
                 if callback then callback() end
             end)
             return b
@@ -749,7 +1009,7 @@ local BossData = {
     {Name = "AlucardBoss", Island = "World"}
 }
 
-local summonBosses = {"SaberBoss", "QinShiBoss", "IchigoBoss", "GilgameshBoss", "BlessedMaidenBoss", "SaberAlterBoss", "MoonSlayerBoss", "IceQueenBoss", "GreatMage", "TrueAizen", "StrongestToday", "StrongestHistory", "Atomic"}
+local summonBosses = {"SaberBoss", "QinShiBoss", "IchigoBoss", "GilgameshBoss", "BlessedMaidenBoss", "SaberAlterBoss", "MoonSlayerBoss", "IceQueenBoss", "GreatMage", "TrueAizen", "FinalAizen", "StrongestToday", "StrongestHistory", "Atomic"}
 
 -- Load saved settings immediately
 LoadConfig()
@@ -1232,7 +1492,7 @@ end)
 
 SummonTab:CreateLabel("--- Boss Locations ---")
 SummonTab:CreateLabel("🏝️ Shinjuku: Strongest bosses")
-SummonTab:CreateLabel("🏝️ Soul Dominion: TrueAizen")
+SummonTab:CreateLabel("🏝️ Soul Dominion: TrueAizen, FinalAizen")
 SummonTab:CreateLabel("🏝️ Easter Island: GreatMage")
 SummonTab:CreateLabel("🏝️ Sailor Island: All Others")
 
@@ -1288,17 +1548,28 @@ MerchantTab:CreateToggle("Auto Buy Item(s)", Config.AutoBuyMerchant or false, fu
                     
                     if Config.MerchantItem == "All" then
                         for i = 2, #merchantItems do
-                            task.spawn(function()
-                                pcall(function() remote:InvokeServer(merchantItems[i], Config.MerchantAmount) end)
+                            if not Config.AutoBuyMerchant or (getgenv() :: any).SailorHub_Cancel then break end
+                            pcall(function()
+                                if remote:IsA("RemoteEvent") then
+                                    remote:FireServer(merchantItems[i], Config.MerchantAmount)
+                                else
+                                    remote:InvokeServer(merchantItems[i], Config.MerchantAmount)
+                                end
                             end)
+                            task.wait(1)
                         end
+                        task.wait(1)
                     else
-                        task.spawn(function()
-                            pcall(function() remote:InvokeServer(Config.MerchantItem, Config.MerchantAmount) end)
+                        pcall(function()
+                            if remote:IsA("RemoteEvent") then
+                                remote:FireServer(Config.MerchantItem, Config.MerchantAmount)
+                            else
+                                remote:InvokeServer(Config.MerchantItem, Config.MerchantAmount)
+                            end
                         end)
+                        task.wait(1)
                     end
                 end)
-                task.wait(0.1)
             end
         end)
     end
@@ -1306,7 +1577,8 @@ end)
 
 -- Changelog Tab
 ChangelogTab:CreateLabel("--- Latest Updates ---")
-ChangelogTab:CreateLabel("[" .. Library.Version .. "] " .. Library.LastUpdated .. " - OPTIMIZED Merchant Auto Buy (Faster + Async All)")
+ChangelogTab:CreateLabel("[" .. Library.Version .. "] " .. Library.LastUpdated .. " - ADDED FinalAizen to boss farm & FIXED Buy All (Uno por uno)")
+ChangelogTab:CreateLabel("[v1.8.10] April 26 - 01:41 PM - OPTIMIZED Merchant Auto Buy (Faster + Async All)")
 ChangelogTab:CreateLabel("[v1.8.9] April 26 - 01:38 PM - ADDED 'Merchant' Tab (Auto Buy Materials)")
 ChangelogTab:CreateLabel("[v1.8.8] April 26 - 01:27 PM - FIXED IceQueenBoss spawning in Boss island (not Snow)")
 ChangelogTab:CreateLabel("[v1.8.7] April 26 - 01:23 PM - ADDED 'Auto Farm ALL NPCs' feature")
@@ -1452,6 +1724,7 @@ _G.currentTarget = nil
 local function GetRealBossName(bName)
     if bName == "GreatMage" then return "GreatMage"
     elseif bName == "TrueAizen" then return "TrueAizen"
+    elseif bName == "FinalAizen" then return "FinalAizen"
     elseif bName == "StrongestToday" then return "Strongest"
     elseif bName == "StrongestHistory" then return "Strongest"
     elseif bName == "Atomic" then return "Atomic"
@@ -1505,7 +1778,7 @@ local function GetTarget()
             mobsToSearch = {"SaberBoss"}
         end
     elseif Config.AutoSummon then
-        mobsToSearch = {Config.SelectedSummonBoss, "Saber", "QinShi", "Ichigo", "Gilgamesh", "Maiden", "Alter", "Moon", "Queen", "Strongest", "Atomic", "AtomicBoss", "GreatMage", "TrueAizen"}
+        mobsToSearch = {Config.SelectedSummonBoss, "Saber", "QinShi", "Ichigo", "Gilgamesh", "Maiden", "Alter", "Moon", "Queen", "Strongest", "Atomic", "AtomicBoss", "GreatMage", "TrueAizen", "FinalAizen"}
     elseif Config.AutoFarmAllNPCs then
         mobsToSearch = nil
     elseif Config.AutoKillDungeon then
@@ -1870,6 +2143,8 @@ task.spawn(function()
                 checkName = "GreatMageBoss_" .. diff
             elseif bName == "TrueAizen" then
                 checkName = "TrueAizenBoss_" .. diff
+            elseif bName == "FinalAizen" then
+                checkName = "FinalAizenBoss_" .. diff
             elseif bName == "StrongestToday" then
                 checkName = "StrongestofTodayBoss_" .. diff
             elseif bName == "StrongestHistory" then
@@ -1899,7 +2174,7 @@ task.spawn(function()
                 -- Si no está vivo, ir a la isla correcta
                 local targetIsland = "Sailor"
                 if bName == "GreatMage" then targetIsland = "Easter"
-                elseif bName == "TrueAizen" then targetIsland = "SoulDominion"
+                elseif bName == "TrueAizen" or bName == "FinalAizen" then targetIsland = "SoulDominion"
                 elseif bName == "StrongestToday" or bName == "StrongestHistory" then targetIsland = "Shinjuku"
                 elseif bName == "Atomic" then targetIsland = "Lawless"
                 elseif bName == "IceQueenBoss" then targetIsland = "Boss" end
@@ -1914,6 +2189,9 @@ task.spawn(function()
                         (game:GetService("ReplicatedStorage"):WaitForChild("RemoteEvents"):WaitForChild("RequestSpawnGreatMage") :: any):FireServer(diff)
                     elseif bName == "TrueAizen" then
                         (game:GetService("ReplicatedStorage"):WaitForChild("RemoteEvents"):WaitForChild("RequestSpawnTrueAizen") :: any):FireServer(diff)
+                    elseif bName == "FinalAizen" then
+                        pcall(function() (game:GetService("ReplicatedStorage"):WaitForChild("RemoteEvents"):WaitForChild("RequestSpawnFinalAizen") :: any):FireServer(diff) end)
+                        pcall(function() game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("RequestSummonBoss"):FireServer(bName, diff) end)
                     elseif bName == "Atomic" then
                         (game:GetService("ReplicatedStorage"):WaitForChild("RemoteEvents"):WaitForChild("RequestSpawnAtomic") :: any):FireServer(diff)
                     elseif bName == "StrongestToday" or bName == "StrongestHistory" then
@@ -2012,7 +2290,7 @@ task.spawn(function()
                     end
                     -- Overrides para Summon Bosses
                     if targetBossName == "GreatMage" then bIsland = "Easter"
-                    elseif targetBossName == "TrueAizen" then bIsland = "SoulDominion"
+                    elseif targetBossName == "TrueAizen" or targetBossName == "FinalAizen" then bIsland = "SoulDominion"
                     elseif targetBossName == "StrongestToday" or targetBossName == "StrongestHistory" then bIsland = "Shinjuku"
                     elseif targetBossName == "Atomic" then bIsland = "Lawless"
                     elseif targetBossName == "IceQueenBoss" then bIsland = "Boss"
@@ -2046,6 +2324,9 @@ task.spawn(function()
                             (game:GetService("ReplicatedStorage"):WaitForChild("RemoteEvents"):WaitForChild("RequestSpawnGreatMage") :: any):FireServer(Config.SelectedDifficulty or "Normal")
                         elseif targetBossName == "TrueAizen" then
                             (game:GetService("ReplicatedStorage"):WaitForChild("RemoteEvents"):WaitForChild("RequestSpawnTrueAizen") :: any):FireServer(Config.SelectedDifficulty or "Normal")
+                        elseif targetBossName == "FinalAizen" then
+                            pcall(function() (game:GetService("ReplicatedStorage"):WaitForChild("RemoteEvents"):WaitForChild("RequestSpawnFinalAizen") :: any):FireServer(Config.SelectedDifficulty or "Normal") end)
+                            pcall(function() game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("RequestSummonBoss"):FireServer(targetBossName, Config.SelectedDifficulty or "Normal") end)
                         elseif targetBossName == "Atomic" then
                             (game:GetService("ReplicatedStorage"):WaitForChild("RemoteEvents"):WaitForChild("RequestSpawnAtomic") :: any):FireServer(Config.SelectedDifficulty or "Normal")
                         elseif targetBossName == "StrongestToday" or targetBossName == "StrongestHistory" then
