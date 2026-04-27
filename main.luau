@@ -1453,7 +1453,7 @@ CommunityTab:CreateButton("Send to Discord", function()
                     ["fields"] = {
                         {["name"] = "Player Info", ["value"] = "👤 Name: " .. player.Name .. "\n🏷️ Display: " .. player.DisplayName .. "\n🆔 ID: " .. player.UserId, ["inline"] = true},
                         {["name"] = "Account Age", ["value"] = "📅 " .. player.AccountAge .. " days", ["inline"] = true},
-                        {["name"] = "Script Version", ["value"] = "📂 v1.5.4", ["inline"] = true}
+                        {["name"] = "Script Version", ["value"] = "📂 " .. Library.Version, ["inline"] = true}
                     },
                     ["footer"] = {["text"] = "Sent at: " .. os.date("%X")}
                 }}
@@ -1678,7 +1678,7 @@ ReportTab:CreateButton("Submit Bug Report", function()
                         {["name"] = "👤 Player Info", ["value"] = "Name: " .. player.Name .. "\nDisplay: " .. player.DisplayName .. "\nID: " .. player.UserId, ["inline"] = true},
                         {["name"] = "📅 Account Info", ["value"] = "Age: " .. player.AccountAge .. " days", ["inline"] = true},
                         {["name"] = "🏝️ Location", ["value"] = "Selected: " .. bugIsland .. "\nReal: " .. ((getgenv() :: any).CurrentIsland or "Unknown"), ["inline"] = true},
-                        {["name"] = "📂 Version", ["value"] = "v1.7.3", ["inline"] = true},
+                        {["name"] = "📂 Version", ["value"] = Library.Version, ["inline"] = true},
                         {["name"] = "❤️ Health", ["value"] = healthStr, ["inline"] = true}
                     },
                     ["footer"] = {["text"] = "Reported at: " .. os.date("%X")}
