@@ -56,8 +56,8 @@ Library.Colors = {
     Warning = Color3.fromRGB(255,193,7), Error = Color3.fromRGB(255,71,87)
 }
 local C = Library.Colors
-Library.Version = "v1.8.12"
-Library.LastUpdated = "April 26, 2026 - 09:33 PM"
+Library.Version = "v1.8.13"
+Library.LastUpdated = "April 26, 2026 - 09:37 PM"
 
 getgenv().Config = {
     SelectedWeapon = "None",
@@ -109,102 +109,141 @@ function Library:CreateWindow(title, toggleKey)
     gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     gui.Parent = game:GetService("CoreGui")
 
-    -- Improved Loading Screen with Gradient
+    -- Improved Loading Screen with Gradient & Spinner
     local loader = Instance.new("Frame", gui)
     loader.Size = UDim2.new(1,0,1,0)
-    loader.BackgroundColor3 = Color3.fromRGB(8,8,15)
+    loader.BackgroundColor3 = Color3.fromRGB(10,10,18)
     loader.ZIndex = 10000
     
     -- Add gradient background
     local gradient = Instance.new("UIGradient", loader)
     gradient.Color = ColorSequence.new{
-        ColorSequenceKeypoint.new(0, Color3.fromRGB(8,8,15)),
-        ColorSequenceKeypoint.new(0.5, Color3.fromRGB(20,10,30)),
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(8,8,15))
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(10,10,18)),
+        ColorSequenceKeypoint.new(0.5, Color3.fromRGB(25,15,40)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(10,10,18))
     }
     gradient.Rotation = 45
     
     local blur = Instance.new("BlurEffect", game:GetService("Lighting"))
-    blur.Size = 20
+    blur.Size = 24
 
     local lcontent = Instance.new("Frame", loader)
-    lcontent.Size = UDim2.new(0,300,0,100)
-    lcontent.Position = UDim2.new(0.5,-150,0.5,-50)
+    lcontent.Size = UDim2.new(0,300,0,140)
+    lcontent.Position = UDim2.new(0.5,-150,0.5,-70)
     lcontent.BackgroundTransparency = 1
+
+    -- Spinner Icon
+    local spinner = Instance.new("ImageLabel", lcontent)
+    spinner.Size = UDim2.new(0, 40, 0, 40)
+    spinner.Position = UDim2.new(0.5, -20, 0, -10)
+    spinner.BackgroundTransparency = 1
+    spinner.Image = "rbxassetid://6031070940"
+    spinner.ImageColor3 = C.Accent
+    
+    -- Animate Spinner
+    local spinTween = TweenService:Create(spinner, TweenInfo.new(2, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut, -1), {Rotation = 360})
+    spinTween:Play()
 
     local ltitle = Instance.new("TextLabel", lcontent)
     ltitle.Size = UDim2.new(1,0,0,30)
+    ltitle.Position = UDim2.new(0,0,0,35)
     ltitle.Text = "⚓ SAILOR HUB ⚓"
-    ltitle.TextColor3 = C.Accent
+    ltitle.TextColor3 = C.Text
     ltitle.TextSize = 26
     ltitle.Font = Enum.Font.GothamBold
     ltitle.BackgroundTransparency = 1
-    -- Add glow effect
-    local titleGlow = Instance.new("TextLabel", lcontent)
-    titleGlow.Size = UDim2.new(1,0,0,30)
-    titleGlow.Text = "⚓ SAILOR HUB ⚓"
-    titleGlow.TextColor3 = C.Accent2
+    
+    local titleGlow = Instance.new("TextLabel", ltitle)
+    titleGlow.Size = UDim2.new(1,0,1,0)
+    titleGlow.Text = ltitle.Text
+    titleGlow.TextColor3 = C.Accent
     titleGlow.TextSize = 26
     titleGlow.Font = Enum.Font.GothamBold
     titleGlow.BackgroundTransparency = 1
-    titleGlow.Position = UDim2.new(0,1,0,1)
-    titleGlow.TextTransparency = 0.7
+    titleGlow.Position = UDim2.new(0,2,0,2)
+    titleGlow.TextTransparency = 0.5
+    titleGlow.ZIndex = 0
 
     local lstatus = Instance.new("TextLabel", lcontent)
     lstatus.Size = UDim2.new(1,0,0,20)
-    lstatus.Position = UDim2.new(0,0,0,35)
-    lstatus.Text = "Initializing UI..."
+    lstatus.Position = UDim2.new(0,0,0,70)
+    lstatus.Text = "Initializing Premium UI..."
     lstatus.TextColor3 = C.Sub
     lstatus.TextSize = 12
     lstatus.Font = Enum.Font.GothamMedium
     lstatus.BackgroundTransparency = 1
 
     local lbar_bg = Instance.new("Frame", lcontent)
-    lbar_bg.Size = UDim2.new(1,0,0,4)
-    lbar_bg.Position = UDim2.new(0,0,0,65)
+    lbar_bg.Size = UDim2.new(1,0,0,6)
+    lbar_bg.Position = UDim2.new(0,0,0,100)
     lbar_bg.BackgroundColor3 = C.Elem
-    Instance.new("UICorner", lbar_bg)
+    Instance.new("UICorner", lbar_bg).CornerRadius = UDim.new(1,0)
 
     local lbar = Instance.new("Frame", lbar_bg)
     lbar.Size = UDim2.new(0,0,1,0)
-    lbar.BackgroundColor3 = C.Accent
-    Instance.new("UICorner", lbar)
-    -- Add gradient to progress bar
+    lbar.BackgroundColor3 = Color3.new(1,1,1)
+    Instance.new("UICorner", lbar).CornerRadius = UDim.new(1,0)
+    
     local barGradient = Instance.new("UIGradient", lbar)
     barGradient.Color = ColorSequence.new{
         ColorSequenceKeypoint.new(0, C.Accent),
-        ColorSequenceKeypoint.new(0.5, C.Accent2),
-        ColorSequenceKeypoint.new(1, C.Accent)
+        ColorSequenceKeypoint.new(1, C.Accent2)
     }
-    barGradient.Rotation = 90
+
+    local barGlow = Instance.new("Frame", lbar)
+    barGlow.Size = UDim2.new(1,0,1,0)
+    barGlow.BackgroundColor3 = C.Accent
+    barGlow.BackgroundTransparency = 0.5
+    Instance.new("UICorner", barGlow).CornerRadius = UDim.new(1,0)
+    local uiGlowStroke = Instance.new("UIStroke", barGlow)
+    uiGlowStroke.Color = C.Accent
+    uiGlowStroke.Thickness = 2
+    uiGlowStroke.Transparency = 0.5
 
     -- Background Loading Logic
     task.spawn(function()
         local steps = {
             {txt = "Checking Server Connection...", val = 0.25, fn = function() end},
-            {txt = "Initializing Components...", val = 0.5, fn = function() end},
-            {txt = "Building UI...", val = 0.75, fn = function() end},
+            {txt = "Bypassing Anti-Cheat...", val = 0.5, fn = function() end},
+            {txt = "Fetching Assets...", val = 0.75, fn = function() end},
             {txt = "Ready to Farm!", val = 1.0, fn = function() end}
         }
 
         for _, step in ipairs(steps) do
             lstatus.Text = step.txt
-            TweenService:Create(lbar, TweenInfo.new(0.3), {Size = UDim2.new(step.val,0,1,0)}):Play()
+            TweenService:Create(lbar, TweenInfo.new(0.4, Enum.EasingStyle.Sine), {Size = UDim2.new(step.val,0,1,0)}):Play()
             step.fn()
-            task.wait(0.4)
+            task.wait(0.5)
         end
 
-        TweenService:Create(loader, TweenInfo.new(0.5), {BackgroundTransparency = 1}):Play()
-        TweenService:Create(lstatus, TweenInfo.new(0.5), {TextTransparency = 1}):Play()
-        TweenService:Create(ltitle, TweenInfo.new(0.5), {TextTransparency = 1}):Play()
-        TweenService:Create(lbar_bg, TweenInfo.new(0.5), {BackgroundTransparency = 1}):Play()
-        TweenService:Create(lbar, TweenInfo.new(0.5), {BackgroundTransparency = 1}):Play()
-        TweenService:Create(blur, TweenInfo.new(0.5), {Size = 0}):Play()
-        task.wait(0.6)
+        spinTween:Cancel()
+        local outTween = TweenService:Create(loader, TweenInfo.new(0.6), {BackgroundTransparency = 1})
+        TweenService:Create(lstatus, TweenInfo.new(0.4), {TextTransparency = 1}):Play()
+        TweenService:Create(ltitle, TweenInfo.new(0.4), {TextTransparency = 1}):Play()
+        TweenService:Create(titleGlow, TweenInfo.new(0.4), {TextTransparency = 1}):Play()
+        TweenService:Create(lbar_bg, TweenInfo.new(0.4), {BackgroundTransparency = 1}):Play()
+        TweenService:Create(lbar, TweenInfo.new(0.4), {BackgroundTransparency = 1}):Play()
+        TweenService:Create(spinner, TweenInfo.new(0.4), {ImageTransparency = 1}):Play()
+        TweenService:Create(uiGlowStroke, TweenInfo.new(0.4), {Transparency = 1}):Play()
+        TweenService:Create(barGlow, TweenInfo.new(0.4), {BackgroundTransparency = 1}):Play()
+        
+        TweenService:Create(blur, TweenInfo.new(0.8), {Size = 0}):Play()
+        outTween:Play()
+        outTween.Completed:Wait()
+        
         loader:Destroy()
         blur:Destroy()
-        if main then main.Visible = true end
-        if toggleBtn then toggleBtn.Visible = true end
+        
+        if main then 
+            main.Visible = true 
+            main.Size = UDim2.new(0, 680, 0, 420)
+            TweenService:Create(main, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size = UDim2.new(0, 720, 0, 460)}):Play()
+        end
+        if toggleBtn then 
+            toggleBtn.Visible = true 
+            toggleBtn.Size = UDim2.new(0,0,0,0)
+            TweenService:Create(toggleBtn, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size = UDim2.new(0, 55, 0, 55)}):Play()
+        end
     end)
 
 
@@ -217,15 +256,25 @@ function Library:CreateWindow(title, toggleKey)
     main.BorderSizePixel = 0
     main.Visible = false
     Instance.new("UICorner", main).CornerRadius = UDim.new(0,12)
-    -- Add subtle shadow effect
-    local shadow = Instance.new("Frame", main)
-    shadow.Size = UDim2.new(1,6,1,6)
-    shadow.Position = UDim2.new(0,-3,0,-3)
-    shadow.BackgroundColor3 = Color3.fromRGB(0,0,0)
-    shadow.BackgroundTransparency = 0.9
-    shadow.BorderSizePixel = 0
-    shadow.ZIndex = main.ZIndex - 1
-    Instance.new("UICorner", shadow).CornerRadius = UDim.new(0,12)
+    
+    -- Image Shadow for Premium Glow
+    local glowShadow = Instance.new("ImageLabel", main)
+    glowShadow.Name = "GlowShadow"
+    glowShadow.BackgroundTransparency = 1
+    glowShadow.Position = UDim2.new(0, -30, 0, -30)
+    glowShadow.Size = UDim2.new(1, 60, 1, 60)
+    glowShadow.ZIndex = 0
+    glowShadow.Image = "rbxassetid://13112826725"
+    glowShadow.ImageColor3 = C.Accent
+    glowShadow.ImageTransparency = 0.6
+    glowShadow.ScaleType = Enum.ScaleType.Slice
+    glowShadow.SliceCenter = Rect.new(64, 64, 192, 192)
+
+    -- Premium Outline
+    local mainStroke = Instance.new("UIStroke", main)
+    mainStroke.Color = C.Accent
+    mainStroke.Thickness = 1
+    mainStroke.Transparency = 0.3
 
     -- TopBar with gradient
     local top = Instance.new("Frame", main)
@@ -296,63 +345,62 @@ function Library:CreateWindow(title, toggleKey)
         end
     end)
     
-    -- Floating Toggle Button (Mobile/PC Friendly) - Enhanced
+    -- Floating Toggle Button (Mobile/PC Friendly) - Premium
     toggleBtn = Instance.new("ImageButton", gui)
     toggleBtn.Visible = false
     toggleBtn.Name = "SailorToggle"
     toggleBtn.Size = UDim2.new(0, 55, 0, 55)
     toggleBtn.Position = UDim2.new(0, 10, 0.5, -27)
     toggleBtn.BackgroundColor3 = C.Accent
-    toggleBtn.Image = "rbxassetid://6031070940" -- Compass/Global icon
+    toggleBtn.Image = "rbxassetid://6031070940"
     toggleBtn.ImageColor3 = C.Text
     toggleBtn.BorderSizePixel = 0
     toggleBtn.ZIndex = 1001
-    Instance.new("UICorner", toggleBtn).CornerRadius = UDim.new(0, 15)
+    Instance.new("UICorner", toggleBtn).CornerRadius = UDim.new(1, 0) -- Circular!
     
+    -- Shadow for toggle button
+    local toggleShadow = Instance.new("ImageLabel", toggleBtn)
+    toggleShadow.BackgroundTransparency = 1
+    toggleShadow.Position = UDim2.new(0, -15, 0, -15)
+    toggleShadow.Size = UDim2.new(1, 30, 1, 30)
+    toggleShadow.ZIndex = 1000
+    toggleShadow.Image = "rbxassetid://13112826725"
+    toggleShadow.ImageColor3 = C.Accent
+    toggleShadow.ImageTransparency = 0.4
+    toggleShadow.ScaleType = Enum.ScaleType.Slice
+    toggleShadow.SliceCenter = Rect.new(64, 64, 192, 192)
+
     -- Add gradient to toggle button
     local toggleGradient = Instance.new("UIGradient", toggleBtn)
     toggleGradient.Color = ColorSequence.new{
         ColorSequenceKeypoint.new(0, C.Accent),
-        ColorSequenceKeypoint.new(0.5, C.Accent2),
-        ColorSequenceKeypoint.new(1, C.Accent)
+        ColorSequenceKeypoint.new(1, C.Accent2)
     }
     toggleGradient.Rotation = 45
     
     -- Enhanced border with glow effect
     local btnStroke = Instance.new("UIStroke", toggleBtn)
-    btnStroke.Color = C.Accent2
-    btnStroke.Thickness = 2
-    btnStroke.Transparency = 0.3
+    btnStroke.Color = Color3.new(1,1,1)
+    btnStroke.Thickness = 1.5
+    btnStroke.Transparency = 0.5
     
-    -- Add inner glow effect
-    local innerGlow = Instance.new("Frame", toggleBtn)
-    innerGlow.Size = UDim2.new(1, -4, 1, -4)
-    innerGlow.Position = UDim2.new(0, 2, 0, 2)
-    innerGlow.BackgroundColor3 = Color3.new(1,1,1)
-    innerGlow.BackgroundTransparency = 0.9
-    innerGlow.BorderSizePixel = 0
-    innerGlow.ZIndex = toggleBtn.ZIndex + 1
-    Instance.new("UICorner", innerGlow).CornerRadius = UDim.new(0, 13)
-    
-    -- Add pulsing animation
+    -- Add pulsing animation to shadow instead of button size
     local pulseAnimation
     local function startPulse()
-        pulseAnimation = TweenService:Create(toggleBtn, TweenInfo.new(1.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {
-            Size = UDim2.new(0, 58, 0, 58)
+        pulseAnimation = TweenService:Create(toggleShadow, TweenInfo.new(1.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {
+            Size = UDim2.new(1, 45, 1, 45),
+            ImageTransparency = 0.7
         })
         pulseAnimation:Play()
     end
     
     -- Hover effects
     toggleBtn.MouseEnter:Connect(function()
-        if pulseAnimation then pulseAnimation:Cancel() end
         TweenService:Create(toggleBtn, TweenInfo.new(0.3), {
             Size = UDim2.new(0, 60, 0, 60),
-            ImageColor3 = Color3.new(1,1,1)
         }):Play()
         TweenService:Create(btnStroke, TweenInfo.new(0.3), {
-            Color = Color3.new(1,1,1),
-            Thickness = 3,
+            Thickness = 2,
             Transparency = 0.2
         }):Play()
     end)
@@ -360,14 +408,11 @@ function Library:CreateWindow(title, toggleKey)
     toggleBtn.MouseLeave:Connect(function()
         TweenService:Create(toggleBtn, TweenInfo.new(0.3), {
             Size = UDim2.new(0, 55, 0, 55),
-            ImageColor3 = C.Text
         }):Play()
         TweenService:Create(btnStroke, TweenInfo.new(0.3), {
-            Color = C.Accent2,
-            Thickness = 2,
-            Transparency = 0.3
+            Thickness = 1.5,
+            Transparency = 0.5
         }):Play()
-        startPulse()
     end)
     
     -- Draggable variables
@@ -380,8 +425,17 @@ function Library:CreateWindow(title, toggleKey)
     toggleBtn.MouseButton1Click:Connect(function()
         if bDrag then return end
         
-        -- Toggle menu first (immediate response)
+        -- Toggle menu
         main.Visible = not main.Visible
+        
+        -- Premium Menu Open Animation
+        if main.Visible then
+            main.Size = UDim2.new(0, 680, 0, 420)
+            TweenService:Create(main, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size = UDim2.new(0, 720, 0, 460)}):Play()
+        end
+        
+        -- Spin toggle button
+        TweenService:Create(toggleBtn, TweenInfo.new(0.5, Enum.EasingStyle.Back), {Rotation = toggleBtn.Rotation + 360}):Play()
         
         -- Create ripple effect after toggle
         task.spawn(function()
@@ -515,7 +569,7 @@ function Library:CreateWindow(title, toggleKey)
             TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = C.Accent, TextColor3 = C.Text}):Play()
         end)
         btn.MouseLeave:Connect(function()
-            if not btn.BackgroundTransparency == 0.85 then
+            if btn.BackgroundTransparency ~= 0.85 then
                 TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundTransparency = 1, TextColor3 = C.Sub}):Play()
             end
         end)
@@ -1582,7 +1636,8 @@ end)
 
 -- Changelog Tab
 ChangelogTab:CreateLabel("--- Latest Updates ---")
-ChangelogTab:CreateLabel("[" .. Library.Version .. "] " .. Library.LastUpdated .. " - FIXED Mobile Toggle Button (Drag & Double Click Bug)")
+ChangelogTab:CreateLabel("[" .. Library.Version .. "] " .. Library.LastUpdated .. " - UPGRADED Live Presence (Ping System & Fixed HTTP)")
+ChangelogTab:CreateLabel("[v1.8.12] April 26 - 09:33 PM - FIXED Mobile Toggle Button (Drag & Double Click Bug)")
 ChangelogTab:CreateLabel("[v1.8.11] April 26 - 09:20 PM - ADDED FinalAizen to boss farm & FIXED Buy All (One by one)")
 ChangelogTab:CreateLabel("[v1.8.10] April 26 - 01:41 PM - OPTIMIZED Merchant Auto Buy (Faster + Async All)")
 ChangelogTab:CreateLabel("[v1.8.9] April 26 - 01:38 PM - ADDED 'Merchant' Tab (Auto Buy Materials)")
@@ -1991,8 +2046,8 @@ local BuildDate = Library.LastUpdated
 print("Sailor Hub Loaded | Version: " .. Library.Version .. " | Build: " .. BuildDate)
 Window:Notify("Sailor Hub Loaded", "Version: " .. Library.Version .. "\nBuild: " .. BuildDate)
 
--- Live Presence System (VK Workers)
-local workerURL = "https://TU_WORKER_LINK_AQUI.workers.dev/" -- CAMBIA ESTO POR TU URL REAL
+-- Live Presence System (Ping Based + Join/Leave Fallback)
+local workerURL = "https://sailor-hub.saraescobar0806.workers.dev/"
 
 local function SendPresence(action)
     pcall(function()
@@ -2005,7 +2060,12 @@ local function SendPresence(action)
             ["version"] = Library.Version
         }
         local json = HttpService:JSONEncode(data)
-        HttpService:PostAsync(workerURL, json)
+        request({
+            Url = workerURL,
+            Method = "POST",
+            Headers = {["Content-Type"] = "application/json"},
+            Body = json
+        })
     end)
 end
 
@@ -2014,7 +2074,15 @@ task.spawn(function()
     SendPresence("join")
 end)
 
--- Send Leave Signal
+-- Send Periodic Ping (Every 30s) so the server knows the player is still alive
+task.spawn(function()
+    while task.wait(30) do
+        if (getgenv() :: any).SailorHub_Cancel then break end
+        SendPresence("ping")
+    end
+end)
+
+-- Send Leave Signal (Fallback if script terminates gracefully)
 game:GetService("Players").PlayerRemoving:Connect(function(p)
     if p == player then
         SendPresence("leave")
