@@ -1583,7 +1583,7 @@ end)
 -- Changelog Tab
 ChangelogTab:CreateLabel("--- Latest Updates ---")
 ChangelogTab:CreateLabel("[" .. Library.Version .. "] " .. Library.LastUpdated .. " - FIXED Mobile Toggle Button (Drag & Double Click Bug)")
-ChangelogTab:CreateLabel("[v1.8.11] April 26 - 09:20 PM - ADDED FinalAizen to boss farm & FIXED Buy All (Uno por uno)")
+ChangelogTab:CreateLabel("[v1.8.11] April 26 - 09:20 PM - ADDED FinalAizen to boss farm & FIXED Buy All (One by one)")
 ChangelogTab:CreateLabel("[v1.8.10] April 26 - 01:41 PM - OPTIMIZED Merchant Auto Buy (Faster + Async All)")
 ChangelogTab:CreateLabel("[v1.8.9] April 26 - 01:38 PM - ADDED 'Merchant' Tab (Auto Buy Materials)")
 ChangelogTab:CreateLabel("[v1.8.8] April 26 - 01:27 PM - FIXED IceQueenBoss spawning in Boss island (not Snow)")
